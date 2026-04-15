@@ -129,7 +129,10 @@ Bug fix quality bar:
 - CI runs through GitHub Actions (`.github/workflows/build.yml`).
 - Ensure CI Java version aligns with project target (Java 21 for this repo).
 - Keep pipeline fast and deterministic:
-  - `./gradlew build`
+  - CI pipeline:
+    - `./gradlew check`
+    - `./gradlew remapJar`
+  - Local one-command equivalent: `./gradlew build`
   - tests enabled
   - artifact upload only when useful
 
