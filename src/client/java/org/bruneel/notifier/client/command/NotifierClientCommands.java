@@ -6,6 +6,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.bruneel.notifier.NotifierMod;
@@ -44,20 +45,18 @@ public final class NotifierClientCommands {
 			}));
 
 			detectLiteral.then(ClientCommandManager.argument("kind", wordArg())
-				.then(ClientCommandManager.argument("id", stringArg())
+				.then(ClientCommandManager.argument("id", identifierArg())
 					.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> {
 						String kindRaw = StringArgumentType.getString(ctx, "kind");
-						String idRaw = StringArgumentType.getString(ctx, "id");
+						Identifier id = ctx.getArgument("id", Identifier.class);
 						boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
 
 						DetectionKind kind;
-						Identifier id;
 						try {
 							kind = DetectionCommandParser.parseKind(kindRaw);
-							id = DetectionCommandParser.parseIdentifier(idRaw);
 						} catch (RuntimeException ex) {
-							ctx.getSource().sendError(text("Invalid kind or id. Example: /notifier detect entity minecraft:horse true"));
-							NotifierMod.LOGGER.warn("Rejecting detect command kind='{}' id='{}'", kindRaw, idRaw);
+							ctx.getSource().sendError(text("Invalid kind. Use 'entity' or 'block'."));
+							NotifierMod.LOGGER.warn("Rejecting detect command kind='{}' id='{}'", kindRaw, id);
 							return 0;
 						}
 
@@ -78,7 +77,7 @@ public final class NotifierClientCommands {
 
 			detectLiteral.then(ClientCommandManager.literal("radius")
 				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", stringArg())
+					.then(ClientCommandManager.argument("id", identifierArg())
 						.then(ClientCommandManager.argument("value", doubleArg(1.0, 64.0))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
@@ -98,7 +97,7 @@ public final class NotifierClientCommands {
 
 			detectLiteral.then(ClientCommandManager.literal("interval")
 				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", stringArg())
+					.then(ClientCommandManager.argument("id", identifierArg())
 						.then(ClientCommandManager.argument("value", intArg(1, 1200))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
@@ -118,7 +117,7 @@ public final class NotifierClientCommands {
 
 			detectLiteral.then(ClientCommandManager.literal("cooldown")
 				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", stringArg())
+					.then(ClientCommandManager.argument("id", identifierArg())
 						.then(ClientCommandManager.argument("value", intArg(0, 72000))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
@@ -170,16 +169,14 @@ public final class NotifierClientCommands {
 		TargetRegistry registry
 	) {
 		String kindRaw = StringArgumentType.getString(ctx, "kind");
-		String idRaw = StringArgumentType.getString(ctx, "id");
+		Identifier id = ctx.getArgument("id", Identifier.class);
 
 		DetectionKind kind;
-		Identifier id;
 		try {
 			kind = DetectionCommandParser.parseKind(kindRaw);
-			id = DetectionCommandParser.parseIdentifier(idRaw);
 		} catch (RuntimeException ex) {
-			ctx.getSource().sendError(text("Invalid kind or id. Example: /notifier detect radius entity minecraft:horse 20"));
-			NotifierMod.LOGGER.warn("Rejecting detect tune command kind='{}' id='{}'", kindRaw, idRaw);
+			ctx.getSource().sendError(text("Invalid kind. Use 'entity' or 'block'."));
+			NotifierMod.LOGGER.warn("Rejecting detect tune command kind='{}' id='{}'", kindRaw, id);
 			return null;
 		}
 
@@ -201,8 +198,8 @@ public final class NotifierClientCommands {
 		return Objects.requireNonNull(StringArgumentType.word());
 	}
 
-	private static StringArgumentType stringArg() {
-		return Objects.requireNonNull(StringArgumentType.string());
+	private static IdentifierArgumentType identifierArg() {
+		return Objects.requireNonNull(IdentifierArgumentType.identifier());
 	}
 
 	private static BoolArgumentType boolArg() {
