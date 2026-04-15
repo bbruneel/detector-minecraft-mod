@@ -27,8 +27,11 @@ If any file conflicts with these constraints (for example Java 25 settings), tre
 
 - `src/main/java/org/bruneel/notifier/NotifierMod.java` - main Fabric mod initializer.
 - `src/client/java/org/bruneel/notifier/client/NotifierModClient.java` - client-only initializer.
+- `src/client/java/org/bruneel/notifier/client/command/NotifierClientCommands.java` - client command registration (`/notifier detect ...`).
+- `src/client/java/org/bruneel/notifier/client/detect/` - detection models, scanners, config persistence, and engine.
 - `src/main/java/org/bruneel/notifier/mixin/ServerLifecycleMixin.java` - server mixin.
 - `src/client/java/org/bruneel/notifier/client/mixin/MinecraftClientMixin.java` - client mixin.
+- `src/test/java/org/bruneel/notifier/client/detect/` - unit tests for detection state/registry/parsing.
 - `src/main/resources/fabric.mod.json` - mod metadata and entrypoints.
 - `src/main/resources/notifier.mixins.json` - common mixin config.
 - `src/client/resources/notifier.client.mixins.json` - client mixin config.
@@ -113,6 +116,7 @@ Minimum for behavior changes:
 
 - Add or update unit tests for pure logic.
 - Run `./gradlew test` locally.
+- Keep command input parsing and detector state transitions in pure classes so they can be tested without a running client.
 
 For Minecraft-integrated behavior:
 
