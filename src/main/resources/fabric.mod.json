@@ -1,31 +1,31 @@
 {
 	"schemaVersion": 1,
-	"id": "modid",
+	"id": "notifier",
 	"version": "${version}",
-	"name": "Example Mod",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "Notifier",
+	"description": "Shows clear in-game notifications for important gameplay and server events.",
 	"authors": [
 		"Me!"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://bruneel.org/",
+		"sources": "https://github.com/bbruneel/my-first-minecraft-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/modid/icon.png",
+	"icon": "assets/notifier/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"com.example.ExampleMod"
+			"org.bruneel.notifier.NotifierMod"
 		],
 		"client": [
-			"com.example.client.ExampleModClient"
+			"org.bruneel.notifier.client.NotifierModClient"
 		]
 	},
 	"mixins": [
-		"modid.mixins.json",
+		"notifier.mixins.json",
 		{
-			"config": "modid.client.mixins.json",
+			"config": "notifier.client.mixins.json",
 			"environment": "client"
 		}
 	],
