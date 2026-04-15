@@ -4,27 +4,65 @@
 # against bad commits.
 
 name: build
-on: [pull_request, push]
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-24.04
     steps:
-      - name: checkout repository
-        uses: actions/checkout@v6
-      - name: validate gradle wrapper
-        uses: gradle/actions/wrapper-validation@v6
-      - name: setup jdk
-        uses: actions/setup-java@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
-          java-version: '25'
-          distribution: 'microsoft'
-      - name: make gradle wrapper executable
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
-      - name: build
-        run: ./gradlew build
-      - name: capture build artifacts
-        uses: actions/upload-artifact@v7
+
+      - name: Run checks
+        run: ./gradlew check
+
+  build-artifact:
+    runs-on: ubuntu-24.04
+    needs: check
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v3
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
         with:
-          name: Artifacts
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build mod artifact
+        run: ./gradlew remapJar
+
+      - name: Capture build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mod-artifacts
           path: build/libs/
