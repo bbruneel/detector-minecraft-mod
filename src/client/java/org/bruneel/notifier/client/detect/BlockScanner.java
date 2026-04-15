@@ -7,19 +7,31 @@ import net.minecraft.registry.Registries;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public final class BlockScanner {
 	private BlockScanner() {
 	}
 
 	public static int countNearby(ClientWorld world, ClientPlayerEntity player, DetectionTarget target) {
+		return findNearby(world, player, target, Integer.MAX_VALUE).size();
+	}
+
+	public static List<DetectionScanHit> findNearby(
+		ClientWorld world,
+		ClientPlayerEntity player,
+		DetectionTarget target,
+		int limit
+	) {
 		if (!Registries.BLOCK.containsId(target.id())) {
-			return 0;
+			return List.of();
 		}
 		Block block = Registries.BLOCK.get(target.id());
 		Block alternateOreVariant = resolveAlternateOreVariant(target.id());
 
 		int radius = (int) Math.floor(target.radius());
-		int matches = 0;
+		List<DetectionScanHit> hits = new ArrayList<>();
 		BlockPos center = player.getBlockPos();
 
 		for (int x = -radius; x <= radius; x++) {
@@ -31,12 +43,22 @@ public final class BlockScanner {
 					}
 					if (world.getBlockState(pos).isOf(block)
 						|| (alternateOreVariant != null && world.getBlockState(pos).isOf(alternateOreVariant))) {
-						matches++;
+						hits.add(new DetectionScanHit(
+							DetectionKind.BLOCK,
+							target.id(),
+							pos.getX(),
+							pos.getY(),
+							pos.getZ(),
+							null
+						));
+						if (hits.size() >= limit) {
+							return hits;
+						}
 					}
 				}
 			}
 		}
-		return matches;
+		return hits;
 	}
 
 	private static Block resolveAlternateOreVariant(Identifier id) {
