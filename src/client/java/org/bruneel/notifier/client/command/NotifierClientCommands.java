@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.bruneel.notifier.NotifierMod;
 import org.bruneel.notifier.client.detect.DetectionKind;
+import org.bruneel.notifier.client.detect.DetectionScanService;
 import org.bruneel.notifier.client.detect.DetectionTarget;
 import org.bruneel.notifier.client.detect.NotifierConfigStore;
 import org.bruneel.notifier.client.detect.TargetRegistry;
@@ -41,6 +42,38 @@ public final class NotifierClientCommands {
 							+ " cooldown=" + target.cooldownTicks()
 					));
 				}
+				return 1;
+			}));
+
+			detectLiteral.then(ClientCommandManager.literal("scan").executes(ctx -> {
+				var source = ctx.getSource();
+				var client = source.getClient();
+				if (client.player == null || client.world == null) {
+					source.sendError(text("Client player/world is not ready yet."));
+					return 0;
+				}
+
+				var enabledTargets = registry.enabledTargets();
+				NotifierMod.LOGGER.info("Detect scan requested enabledTargets={}", enabledTargets.size());
+
+				DetectionScanService.ScanExecution execution = DetectionScanService.run(
+					client.world,
+					client.player,
+					enabledTargets
+				);
+
+				for (String line : execution.report().chatLines()) {
+					client.player.sendMessage(text(line), false);
+				}
+
+				NotifierMod.LOGGER.info(
+					"Detect scan finished enabledTargets={}, totalMatches={}, shownMatches={}, truncatedMatches={}, invalidTargets={}",
+					execution.enabledTargets(),
+					execution.report().totalMatches(),
+					execution.report().shownMatches(),
+					execution.report().truncatedMatches(),
+					execution.report().invalidTargets()
+				);
 				return 1;
 			}));
 

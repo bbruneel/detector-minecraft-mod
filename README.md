@@ -7,6 +7,7 @@ Notifier is a Fabric client-side mod for Minecraft `1.21.x` that sends proximity
 - Scans around the local player for configured detection targets.
 - Supports both entity targets (for example `minecraft:horse`) and block targets (for example `minecraft:diamond_ore`).
 - Triggers alerts on edge transitions (when a target enters range), then applies a per-target cooldown.
+- Supports on-demand scan reports in persistent local chat so results stay visible for review.
 - Stores client preferences in `config/notifier-client.json`.
 
 ## Commands
@@ -15,6 +16,11 @@ All commands are client-side and only affect your local client.
 
 - `/notifier detect list`
   - Lists configured targets and whether each one is enabled.
+- `/notifier detect scan`
+  - Runs an immediate scan for all enabled targets and writes results to your local chat history.
+  - Example output:
+    - `notifier: entity minecraft:horse at 120 66 -41 dist=7.2`
+    - `notifier: block minecraft:diamond_ore at 126 10 -38`
 - `/notifier detect <kind> <id> <enabled>`
   - Example entity: `/notifier detect entity minecraft:horse true`
   - Example block: `/notifier detect block minecraft:diamond_ore true`
@@ -39,6 +45,7 @@ All commands are client-side and only affect your local client.
   - `wasNearby` for edge-trigger behavior
   - cooldown counter
   - interval counter
+- Passive detections continue to use transient notifications; `/notifier detect scan` emits a persistent chat report.
 - Block scans are heavier than entity scans, so block defaults use a slower interval and smaller radius.
 
 ## Logging and Troubleshooting
