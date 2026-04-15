@@ -14,13 +14,14 @@ import org.bruneel.notifier.client.detect.DetectionTarget;
 import org.bruneel.notifier.client.detect.NotifierConfigStore;
 import org.bruneel.notifier.client.detect.TargetRegistry;
 
+import java.util.Objects;
 import java.util.function.BooleanSupplier;
 
-@SuppressWarnings("null")
 public final class NotifierClientCommands {
 	private NotifierClientCommands() {
 	}
 
+	@SuppressWarnings("null")
 	public static void register(
 		TargetRegistry registry,
 		NotifierConfigStore configStore,
@@ -32,7 +33,7 @@ public final class NotifierClientCommands {
 			detectLiteral.then(ClientCommandManager.literal("list").executes(ctx -> {
 				var source = ctx.getSource();
 				for (DetectionTarget target : registry.allTargets()) {
-					source.sendFeedback(Text.literal(
+					source.sendFeedback(text(
 						target.kind() + " " + target.id() + " enabled=" + target.enabled()
 							+ " radius=" + target.radius()
 							+ " interval=" + target.checkIntervalTicks()
@@ -42,9 +43,9 @@ public final class NotifierClientCommands {
 				return 1;
 			}));
 
-			detectLiteral.then(ClientCommandManager.argument("kind", StringArgumentType.word())
-				.then(ClientCommandManager.argument("id", StringArgumentType.string())
-					.then(ClientCommandManager.argument("enabled", BoolArgumentType.bool()).executes(ctx -> {
+			detectLiteral.then(ClientCommandManager.argument("kind", wordArg())
+				.then(ClientCommandManager.argument("id", stringArg())
+					.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> {
 						String kindRaw = StringArgumentType.getString(ctx, "kind");
 						String idRaw = StringArgumentType.getString(ctx, "id");
 						boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
@@ -55,7 +56,7 @@ public final class NotifierClientCommands {
 							kind = DetectionCommandParser.parseKind(kindRaw);
 							id = DetectionCommandParser.parseIdentifier(idRaw);
 						} catch (RuntimeException ex) {
-							ctx.getSource().sendError(Text.literal("Invalid kind or id. Example: /notifier detect entity minecraft:horse true"));
+							ctx.getSource().sendError(text("Invalid kind or id. Example: /notifier detect entity minecraft:horse true"));
 							NotifierMod.LOGGER.warn("Rejecting detect command kind='{}' id='{}'", kindRaw, idRaw);
 							return 0;
 						}
@@ -68,7 +69,7 @@ public final class NotifierClientCommands {
 						registry.upsert(next);
 						configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
 
-						ctx.getSource().sendFeedback(Text.literal(
+						ctx.getSource().sendFeedback(text(
 							"notifier: " + kind.name().toLowerCase() + " " + id + " enabled=" + enabled
 						));
 						NotifierMod.LOGGER.info("Command detect update kind={}, id={}, enabled={}", kind, id, enabled);
@@ -76,9 +77,9 @@ public final class NotifierClientCommands {
 					}))));
 
 			detectLiteral.then(ClientCommandManager.literal("radius")
-				.then(ClientCommandManager.argument("kind", StringArgumentType.word())
-					.then(ClientCommandManager.argument("id", StringArgumentType.string())
-						.then(ClientCommandManager.argument("value", DoubleArgumentType.doubleArg(1.0, 64.0))
+				.then(ClientCommandManager.argument("kind", wordArg())
+					.then(ClientCommandManager.argument("id", stringArg())
+						.then(ClientCommandManager.argument("value", doubleArg(1.0, 64.0))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
 								if (target == null) {
@@ -90,15 +91,15 @@ public final class NotifierClientCommands {
 								registry.upsert(updated);
 								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
 
-								ctx.getSource().sendFeedback(Text.literal("notifier: radius updated for " + target.id() + " -> " + value));
+								ctx.getSource().sendFeedback(text("notifier: radius updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect radius update kind={}, id={}, value={}", target.kind(), target.id(), value);
 								return 1;
 							})))));
 
 			detectLiteral.then(ClientCommandManager.literal("interval")
-				.then(ClientCommandManager.argument("kind", StringArgumentType.word())
-					.then(ClientCommandManager.argument("id", StringArgumentType.string())
-						.then(ClientCommandManager.argument("value", IntegerArgumentType.integer(1, 1200))
+				.then(ClientCommandManager.argument("kind", wordArg())
+					.then(ClientCommandManager.argument("id", stringArg())
+						.then(ClientCommandManager.argument("value", intArg(1, 1200))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
 								if (target == null) {
@@ -110,15 +111,15 @@ public final class NotifierClientCommands {
 								registry.upsert(updated);
 								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
 
-								ctx.getSource().sendFeedback(Text.literal("notifier: interval updated for " + target.id() + " -> " + value));
+								ctx.getSource().sendFeedback(text("notifier: interval updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect interval update kind={}, id={}, value={}", target.kind(), target.id(), value);
 								return 1;
 							})))));
 
 			detectLiteral.then(ClientCommandManager.literal("cooldown")
-				.then(ClientCommandManager.argument("kind", StringArgumentType.word())
-					.then(ClientCommandManager.argument("id", StringArgumentType.string())
-						.then(ClientCommandManager.argument("value", IntegerArgumentType.integer(0, 72000))
+				.then(ClientCommandManager.argument("kind", wordArg())
+					.then(ClientCommandManager.argument("id", stringArg())
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
 							.executes(ctx -> {
 								DetectionTarget target = requireTarget(ctx, registry);
 								if (target == null) {
@@ -130,7 +131,7 @@ public final class NotifierClientCommands {
 								registry.upsert(updated);
 								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
 
-								ctx.getSource().sendFeedback(Text.literal("notifier: cooldown updated for " + target.id() + " -> " + value));
+								ctx.getSource().sendFeedback(text("notifier: cooldown updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect cooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
 								return 1;
 							})))));
@@ -163,6 +164,7 @@ public final class NotifierClientCommands {
 		);
 	}
 
+	@SuppressWarnings("null")
 	private static DetectionTarget requireTarget(
 		com.mojang.brigadier.context.CommandContext<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> ctx,
 		TargetRegistry registry
@@ -176,18 +178,42 @@ public final class NotifierClientCommands {
 			kind = DetectionCommandParser.parseKind(kindRaw);
 			id = DetectionCommandParser.parseIdentifier(idRaw);
 		} catch (RuntimeException ex) {
-			ctx.getSource().sendError(Text.literal("Invalid kind or id. Example: /notifier detect radius entity minecraft:horse 20"));
+			ctx.getSource().sendError(text("Invalid kind or id. Example: /notifier detect radius entity minecraft:horse 20"));
 			NotifierMod.LOGGER.warn("Rejecting detect tune command kind='{}' id='{}'", kindRaw, idRaw);
 			return null;
 		}
 
 		DetectionTarget target = registry.find(kind, id.toString());
 		if (target == null) {
-			ctx.getSource().sendError(Text.literal("Target not configured. Add it first, e.g. /notifier detect "
+			ctx.getSource().sendError(text("Target not configured. Add it first, e.g. /notifier detect "
 				+ kind.name().toLowerCase() + " " + id + " true"));
 			NotifierMod.LOGGER.warn("Cannot tune unknown target kind={}, id={}", kind, id);
 			return null;
 		}
 		return target;
+	}
+
+	private static Text text(String value) {
+		return Objects.requireNonNull(Text.literal(value));
+	}
+
+	private static StringArgumentType wordArg() {
+		return Objects.requireNonNull(StringArgumentType.word());
+	}
+
+	private static StringArgumentType stringArg() {
+		return Objects.requireNonNull(StringArgumentType.string());
+	}
+
+	private static BoolArgumentType boolArg() {
+		return Objects.requireNonNull(BoolArgumentType.bool());
+	}
+
+	private static DoubleArgumentType doubleArg(double min, double max) {
+		return Objects.requireNonNull(DoubleArgumentType.doubleArg(min, max));
+	}
+
+	private static IntegerArgumentType intArg(int min, int max) {
+		return Objects.requireNonNull(IntegerArgumentType.integer(min, max));
 	}
 }
