@@ -25,16 +25,16 @@ If any file conflicts with these constraints (for example Java 25 settings), tre
 
 ## Current Project Layout
 
-- `src/main/java/com/example/ExampleMod.java` - main Fabric mod initializer.
-- `src/client/java/com/example/client/ExampleModClient.java` - client-only initializer.
-- `src/main/java/com/example/mixin/ServerLifecycleMixin.java` - server mixin.
-- `src/client/java/com/example/client/mixin/ExampleClientMixin.java` - client mixin.
+- `src/main/java/org/bruneel/notifier/NotifierMod.java` - main Fabric mod initializer.
+- `src/client/java/org/bruneel/notifier/client/NotifierModClient.java` - client-only initializer.
+- `src/main/java/org/bruneel/notifier/mixin/ServerLifecycleMixin.java` - server mixin.
+- `src/client/java/org/bruneel/notifier/client/mixin/MinecraftClientMixin.java` - client mixin.
 - `src/main/resources/fabric.mod.json` - mod metadata and entrypoints.
-- `src/main/resources/modid.mixins.json` - common mixin config.
-- `src/client/resources/modid.client.mixins.json` - client mixin config.
+- `src/main/resources/notifier.mixins.json` - common mixin config.
+- `src/client/resources/notifier.client.mixins.json` - client mixin config.
 - `.github/workflows/build.yml` - CI build pipeline.
 
-Note: this repo still contains template placeholders (`modid`, `com.example`, `Example Mod`) that should be replaced as the mod identity is finalized.
+Note: keep naming aligned to `notifier` and `org.bruneel.notifier` for future additions.
 
 ## Agent Workflow
 

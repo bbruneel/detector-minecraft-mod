@@ -1,7 +1,8 @@
 {
 	"required": true,
-	"package": "com.example.mixin",
-	"compatibilityLevel": "JAVA_25",
+	"package": "org.bruneel.notifier.mixin",
+	"refmap": "notifier.refmap.json",
+	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ServerLifecycleMixin"
 	],
