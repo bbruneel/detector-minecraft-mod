@@ -54,6 +54,7 @@ public class NotifierModClient implements ClientModInitializer {
 		}
 
 		tickCounter++;
+		// Skip most ticks to reduce per-tick work; scanning runs every CHECK_INTERVAL_TICKS.
 		if (tickCounter < CHECK_INTERVAL_TICKS) {
 			return;
 		}
