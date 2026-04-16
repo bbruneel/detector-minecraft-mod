@@ -4,6 +4,7 @@ import net.minecraft.util.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -12,8 +13,26 @@ class ScanHighlightStateTest {
 	void replaceWithScanResultsAssignsColorsByKind() {
 		ScanHighlightState state = new ScanHighlightState(60);
 		List<DetectionScanHit> hits = List.of(
-			new DetectionScanHit(DetectionKind.ENTITY, Identifier.of("minecraft", "horse"), 10, 64, 10, 3.0),
-			new DetectionScanHit(DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), 11, 12, 11, null)
+			new DetectionScanHit(
+				DetectionKind.ENTITY,
+				Identifier.of("minecraft", "horse"),
+				10,
+				64,
+				10,
+				3.0,
+				UUID.fromString("00000000-0000-0000-0000-000000000001"),
+				1
+			),
+			new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "diamond_ore"),
+				11,
+				12,
+				11,
+				null,
+				null,
+				null
+			)
 		);
 
 		ScanHighlightState.HighlightBatchResult result = state.replaceWithScanResults(hits, 100);
@@ -31,7 +50,16 @@ class ScanHighlightStateTest {
 	void activeHighlightsPrunesEntriesAfterExpiryTick() {
 		ScanHighlightState state = new ScanHighlightState(5);
 		state.replaceWithScanResults(
-			List.of(new DetectionScanHit(DetectionKind.BLOCK, Identifier.of("minecraft", "gold_ore"), 1, 2, 3, null)),
+			List.of(new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "gold_ore"),
+				1,
+				2,
+				3,
+				null,
+				null,
+				null
+			)),
 			10
 		);
 

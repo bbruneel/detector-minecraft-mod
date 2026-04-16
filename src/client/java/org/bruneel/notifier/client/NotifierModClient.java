@@ -8,6 +8,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.bruneel.notifier.NotifierMod;
@@ -103,6 +104,7 @@ public class NotifierModClient implements ClientModInitializer {
 
 		MatrixStack matrices = context.matrices();
 		VertexConsumer lines = context.consumers().getBuffer(NoDepthLineLayer.LINES_NO_DEPTH);
+		float tickDelta = client.getRenderTickCounter().getTickProgress(true);
 
 		if (worldTime - lastHighlightRenderDetailTick >= 20) {
 			lastHighlightRenderDetailTick = worldTime;
@@ -123,13 +125,42 @@ public class NotifierModClient implements ClientModInitializer {
 		}
 
 		for (ScanHighlightState.ScanHighlight highlight : activeHighlights) {
-			Box shifted = highlight.box().offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-			Box outline = highlight.kind() == DetectionKind.BLOCK
-				? shifted.expand(0.002D)
-				: shifted;
+			Box outline;
+			if (highlight.kind() == DetectionKind.BLOCK) {
+				Box shifted = highlight.box().offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+				outline = shifted.expand(0.002D);
+			} else {
+				Entity entity = resolveEntity(world, highlight);
+				if (entity == null) {
+					continue;
+				}
+
+				Vec3d lerpedPos = entity.getLerpedPos(tickDelta);
+				Vec3d currentPos = new Vec3d(entity.getX(), entity.getY(), entity.getZ());
+				Vec3d delta = lerpedPos.subtract(currentPos);
+
+				Box box = entity.getBoundingBox().offset(delta.x, delta.y, delta.z).expand(0.05D);
+				outline = box.offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
+			}
 			ScanHighlightState.ScanHighlightColor color = highlight.color();
 			drawBoxLines(matrices, lines, outline, color);
 		}
+	}
+
+	private static Entity resolveEntity(net.minecraft.client.world.ClientWorld world, ScanHighlightState.ScanHighlight highlight) {
+		Integer entityId = highlight.entityId();
+		if (entityId == null) {
+			return null;
+		}
+
+		Entity entity = world.getEntityById(entityId);
+		if (entity == null) {
+			return null;
+		}
+		if (highlight.entityUuid() != null && !highlight.entityUuid().equals(entity.getUuid())) {
+			return null;
+		}
+		return entity;
 	}
 
 	private static void drawBoxLines(

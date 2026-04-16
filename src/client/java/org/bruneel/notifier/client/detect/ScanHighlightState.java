@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 public final class ScanHighlightState {
 	public static final int DEFAULT_TTL_TICKS = 1200;
@@ -50,6 +51,8 @@ public final class ScanHighlightState {
 				hit.kind(),
 				hit.id().toString(),
 				new Box(origin),
+				hit.entityUuid(),
+				hit.entityId(),
 				color,
 				expiresAt
 			));
@@ -91,6 +94,8 @@ public final class ScanHighlightState {
 		DetectionKind kind,
 		String targetId,
 		Box box,
+		UUID entityUuid,
+		Integer entityId,
 		ScanHighlightColor color,
 		long expiresAtTick
 	) {
