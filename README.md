@@ -24,6 +24,8 @@ All commands are client-side and only affect your local client.
   - Example output:
     - `notifier: entity minecraft:horse at 120 66 -41 dist=7.2`
     - `notifier: block minecraft:diamond_ore at 126 10 -38`
+- `/notifier detect highlightOnMatch <true|false>`
+  - When enabled (default `true`), the detector draws capped world-space outlines immediately when a passive detection match triggers (for the triggering target only).
 - `/notifier detect <kind> <id> <enabled>`
   - Example entity: `/notifier detect entity minecraft:horse true`
   - Example block: `/notifier detect block minecraft:diamond_ore true`
@@ -49,7 +51,8 @@ All commands are client-side and only affect your local client.
   - cooldown counter
   - interval counter
 - Passive detections continue to use transient notifications; `/notifier detect scan` emits a persistent chat report.
-- Scan outlines from `/notifier detect scan` are temporary and fade automatically after roughly 6 seconds (`120` ticks).
+- Scan outlines from `/notifier detect scan` are temporary and fade automatically after roughly 60 seconds (`1200` ticks).
+- When `highlightOnMatch` is enabled, the detector also updates outlines on the passive edge-transition that triggers a notification (outlines are capped like the scan command and apply to the triggering target only).
 - Block scans are heavier than entity scans, so block defaults use a slower interval and smaller radius.
 
 ## Logging and Troubleshooting
