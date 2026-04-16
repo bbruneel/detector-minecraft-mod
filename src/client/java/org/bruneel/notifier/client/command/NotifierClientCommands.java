@@ -14,6 +14,7 @@ import org.bruneel.notifier.client.detect.DetectionKind;
 import org.bruneel.notifier.client.detect.DetectionScanService;
 import org.bruneel.notifier.client.detect.DetectionTarget;
 import org.bruneel.notifier.client.detect.NotifierConfigStore;
+import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
 
 import java.util.Objects;
@@ -27,7 +28,8 @@ public final class NotifierClientCommands {
 	public static void register(
 		TargetRegistry registry,
 		NotifierConfigStore configStore,
-		BooleanSupplier verboseLoggingSupplier
+		BooleanSupplier verboseLoggingSupplier,
+		ScanHighlightState highlightState
 	) {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
 			var detectLiteral = ClientCommandManager.literal("detect");
@@ -61,6 +63,10 @@ public final class NotifierClientCommands {
 					client.player,
 					enabledTargets
 				);
+				ScanHighlightState.HighlightBatchResult highlighted = highlightState.replaceWithScanResults(
+					execution.hits(),
+					client.world.getTime()
+				);
 
 				for (String line : execution.report().chatLines()) {
 					client.player.sendMessage(text(line), false);
@@ -73,6 +79,13 @@ public final class NotifierClientCommands {
 					execution.report().shownMatches(),
 					execution.report().truncatedMatches(),
 					execution.report().invalidTargets()
+				);
+				NotifierMod.LOGGER.info(
+					"Detect highlights updated entities={}, blocks={}, total={}, durationTicks={}",
+					highlighted.entities(),
+					highlighted.blocks(),
+					highlighted.total(),
+					highlighted.ttlTicks()
 				);
 				return 1;
 			}));
