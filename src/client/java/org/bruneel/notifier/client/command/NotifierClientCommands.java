@@ -18,6 +18,7 @@ import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
 
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
 public final class NotifierClientCommands {
@@ -29,6 +30,7 @@ public final class NotifierClientCommands {
 		TargetRegistry registry,
 		NotifierConfigStore configStore,
 		BooleanSupplier verboseLoggingSupplier,
+		AtomicBoolean highlightOnMatchRef,
 		ScanHighlightState highlightState
 	) {
 		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> {
@@ -90,6 +92,16 @@ public final class NotifierClientCommands {
 				return 1;
 			}));
 
+			detectLiteral.then(ClientCommandManager.literal("highlightOnMatch")
+				.then(ClientCommandManager.argument("value", boolArg()).executes(ctx -> {
+					boolean value = BoolArgumentType.getBool(ctx, "value");
+					highlightOnMatchRef.set(value);
+					configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+					ctx.getSource().sendFeedback(text("notifier: highlightOnMatch=" + value));
+					NotifierMod.LOGGER.info("Command detect highlightOnMatch updated value={}", value);
+					return 1;
+				})));
+
 			detectLiteral.then(ClientCommandManager.argument("kind", wordArg())
 				.then(ClientCommandManager.argument("id", identifierArg())
 					.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> {
@@ -112,7 +124,7 @@ public final class NotifierClientCommands {
 							: defaultTarget(kind, id, enabled);
 
 						registry.upsert(next);
-						configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
+						configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
 						ctx.getSource().sendFeedback(text(
 							"notifier: " + kind.name().toLowerCase() + " " + id + " enabled=" + enabled
@@ -134,7 +146,7 @@ public final class NotifierClientCommands {
 								double value = DoubleArgumentType.getDouble(ctx, "value");
 								DetectionTarget updated = target.withRadius(value);
 								registry.upsert(updated);
-								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
 								ctx.getSource().sendFeedback(text("notifier: radius updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect radius update kind={}, id={}, value={}", target.kind(), target.id(), value);
@@ -154,7 +166,7 @@ public final class NotifierClientCommands {
 								int value = IntegerArgumentType.getInteger(ctx, "value");
 								DetectionTarget updated = target.withCheckIntervalTicks(value);
 								registry.upsert(updated);
-								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
 								ctx.getSource().sendFeedback(text("notifier: interval updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect interval update kind={}, id={}, value={}", target.kind(), target.id(), value);
@@ -174,7 +186,7 @@ public final class NotifierClientCommands {
 								int value = IntegerArgumentType.getInteger(ctx, "value");
 								DetectionTarget updated = target.withCooldownTicks(value);
 								registry.upsert(updated);
-								configStore.save(registry, verboseLoggingSupplier.getAsBoolean());
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
 								ctx.getSource().sendFeedback(text("notifier: cooldown updated for " + target.id() + " -> " + value));
 								NotifierMod.LOGGER.info("Command detect cooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);

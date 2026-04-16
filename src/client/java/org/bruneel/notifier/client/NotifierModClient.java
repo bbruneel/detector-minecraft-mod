@@ -6,21 +6,17 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.bruneel.notifier.NotifierMod;
 import org.bruneel.notifier.client.command.NotifierClientCommands;
-import org.bruneel.notifier.client.detect.DetectionKind;
 import org.bruneel.notifier.client.detect.DetectionEngine;
 import org.bruneel.notifier.client.detect.DetectionRuntimeState;
 import org.bruneel.notifier.client.detect.NotifierConfigStore;
 import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
-import org.bruneel.notifier.client.render.NoDepthLineLayer;
+import org.bruneel.notifier.client.render.ScanHighlightRenderer;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,8 +25,10 @@ public class NotifierModClient implements ClientModInitializer {
 	private DetectionEngine detectionEngine;
 	private NotifierConfigStore configStore;
 	private boolean verboseLogging;
+	private AtomicBoolean highlightOnMatch;
 	private boolean hasLoggedWaitingForWorld = false;
 	private ScanHighlightState scanHighlightState;
+	private ScanHighlightRenderer scanHighlightRenderer;
 	private long lastHighlightRenderDebugTick = Long.MIN_VALUE;
 	private long lastHighlightRenderDetailTick = Long.MIN_VALUE;
 	private boolean hasLoggedRenderCallbackSeen = false;
@@ -41,11 +39,27 @@ public class NotifierModClient implements ClientModInitializer {
 		NotifierConfigStore.LoadResult loadResult = configStore.loadOrDefault();
 		targetRegistry = loadResult.registry();
 		verboseLogging = loadResult.verboseLogging();
-		configStore.save(targetRegistry, verboseLogging);
-
-		detectionEngine = new DetectionEngine(targetRegistry, new DetectionRuntimeState(), verboseLogging);
 		scanHighlightState = new ScanHighlightState();
-		NotifierClientCommands.register(targetRegistry, configStore, () -> verboseLogging, scanHighlightState);
+		scanHighlightRenderer = new ScanHighlightRenderer();
+
+		highlightOnMatch = new AtomicBoolean(loadResult.highlightOnMatch());
+		configStore.save(targetRegistry, verboseLogging, highlightOnMatch.get());
+
+		detectionEngine = new DetectionEngine(
+			targetRegistry,
+			new DetectionRuntimeState(),
+			verboseLogging,
+			scanHighlightState,
+			highlightOnMatch::get
+		);
+
+		NotifierClientCommands.register(
+			targetRegistry,
+			configStore,
+			() -> verboseLogging,
+			highlightOnMatch,
+			scanHighlightState
+		);
 
 		NotifierMod.LOGGER.info(
 			"Notifier initialized with {} targets (enabled={}, verbose={})",
@@ -80,7 +94,7 @@ public class NotifierModClient implements ClientModInitializer {
 		}
 
 		MinecraftClient client = MinecraftClient.getInstance();
-		if (client.world == null || scanHighlightState == null) {
+		if (client.world == null || scanHighlightState == null || scanHighlightRenderer == null) {
 			return;
 		}
 		final var world = Objects.requireNonNull(client.world);
@@ -102,8 +116,6 @@ public class NotifierModClient implements ClientModInitializer {
 			return;
 		}
 
-		MatrixStack matrices = context.matrices();
-		VertexConsumer lines = context.consumers().getBuffer(NoDepthLineLayer.LINES_NO_DEPTH);
 		float tickDelta = client.getRenderTickCounter().getTickProgress(true);
 
 		if (worldTime - lastHighlightRenderDetailTick >= 20) {
@@ -124,100 +136,7 @@ public class NotifierModClient implements ClientModInitializer {
 			);
 		}
 
-		for (ScanHighlightState.ScanHighlight highlight : activeHighlights) {
-			Box outline;
-			if (highlight.kind() == DetectionKind.BLOCK) {
-				Box shifted = highlight.box().offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-				outline = shifted.expand(0.002D);
-			} else {
-				Entity entity = resolveEntity(world, highlight);
-				if (entity == null) {
-					continue;
-				}
-
-				Vec3d lerpedPos = entity.getLerpedPos(tickDelta);
-				Vec3d currentPos = new Vec3d(entity.getX(), entity.getY(), entity.getZ());
-				Vec3d delta = lerpedPos.subtract(currentPos);
-
-				Box box = entity.getBoundingBox().offset(delta.x, delta.y, delta.z).expand(0.05D);
-				outline = box.offset(-cameraPos.x, -cameraPos.y, -cameraPos.z);
-			}
-			ScanHighlightState.ScanHighlightColor color = highlight.color();
-			drawBoxLines(matrices, lines, outline, color);
-		}
-	}
-
-	private static Entity resolveEntity(net.minecraft.client.world.ClientWorld world, ScanHighlightState.ScanHighlight highlight) {
-		Integer entityId = highlight.entityId();
-		if (entityId == null) {
-			return null;
-		}
-
-		Entity entity = world.getEntityById(entityId);
-		if (entity == null) {
-			return null;
-		}
-		if (highlight.entityUuid() != null && !highlight.entityUuid().equals(entity.getUuid())) {
-			return null;
-		}
-		return entity;
-	}
-
-	private static void drawBoxLines(
-		MatrixStack matrices,
-		VertexConsumer lines,
-		Box box,
-		ScanHighlightState.ScanHighlightColor color
-	) {
-		var entry = matrices.peek();
-		float r = color.red();
-		float g = color.green();
-		float b = color.blue();
-		float a = color.alpha();
-
-		emitLine(lines, entry, box.minX, box.minY, box.minZ, box.maxX, box.minY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.minX, box.minY, box.minZ, box.minX, box.maxY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.minX, box.minY, box.minZ, box.minX, box.minY, box.maxZ, r, g, b, a);
-
-		emitLine(lines, entry, box.maxX, box.minY, box.maxZ, box.maxX, box.minY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.maxX, box.minY, box.maxZ, box.maxX, box.maxY, box.maxZ, r, g, b, a);
-		emitLine(lines, entry, box.maxX, box.minY, box.maxZ, box.minX, box.minY, box.maxZ, r, g, b, a);
-
-		emitLine(lines, entry, box.maxX, box.maxY, box.minZ, box.maxX, box.minY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.maxX, box.maxY, box.minZ, box.minX, box.maxY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.maxX, box.maxY, box.minZ, box.maxX, box.maxY, box.maxZ, r, g, b, a);
-
-		emitLine(lines, entry, box.minX, box.maxY, box.maxZ, box.minX, box.minY, box.maxZ, r, g, b, a);
-		emitLine(lines, entry, box.minX, box.maxY, box.maxZ, box.minX, box.maxY, box.minZ, r, g, b, a);
-		emitLine(lines, entry, box.minX, box.maxY, box.maxZ, box.maxX, box.maxY, box.maxZ, r, g, b, a);
-	}
-
-	private static void emitLine(
-		VertexConsumer lines,
-		MatrixStack.Entry entry,
-		double sx, double sy, double sz,
-		double ex, double ey, double ez,
-		float r, float g, float b, float a
-	) {
-		float nx = (float) (ex - sx);
-		float ny = (float) (ey - sy);
-		float nz = (float) (ez - sz);
-		float length = (float) Math.sqrt(nx * nx + ny * ny + nz * nz);
-		if (length <= 1.0e-6F) {
-			return;
-		}
-		nx /= length;
-		ny /= length;
-		nz /= length;
-
-		lines.vertex(entry, (float) sx, (float) sy, (float) sz)
-			.color(r, g, b, a)
-			.normal(entry, nx, ny, nz)
-			.lineWidth(2.0F);
-		lines.vertex(entry, (float) ex, (float) ey, (float) ez)
-			.color(r, g, b, a)
-			.normal(entry, nx, ny, nz)
-			.lineWidth(2.0F);
+		scanHighlightRenderer.render(context, world, activeHighlights, cameraPos, tickDelta);
 	}
 
 }

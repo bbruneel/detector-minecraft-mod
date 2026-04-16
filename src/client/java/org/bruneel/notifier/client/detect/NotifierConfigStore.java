@@ -32,10 +32,6 @@ public final class NotifierConfigStore {
 
 		try (Reader reader = Files.newBufferedReader(configPath)) {
 			ConfigFile parsed = GSON.fromJson(reader, ConfigFile.class);
-			if (parsed == null) {
-				NotifierMod.LOGGER.warn("Notifier config at {} was empty; using defaults", configPath);
-				return defaults();
-			}
 			return fromConfigFile(parsed);
 		} catch (IOException | JsonParseException ex) {
 			NotifierMod.LOGGER.warn("Notifier config failed to load from {}; using defaults", configPath, ex);
@@ -43,8 +39,8 @@ public final class NotifierConfigStore {
 		}
 	}
 
-	public void save(TargetRegistry registry, boolean verboseLogging) {
-		ConfigFile data = toConfigFile(registry, verboseLogging);
+	public void save(TargetRegistry registry, boolean verboseLogging, boolean highlightOnMatch) {
+		ConfigFile data = toConfigFile(registry, verboseLogging, highlightOnMatch);
 		Path tmpPath = configPath.resolveSibling(CONFIG_FILE_NAME + ".tmp");
 		try {
 			Files.createDirectories(configPath.getParent());
@@ -73,12 +69,13 @@ public final class NotifierConfigStore {
 			NotifierMod.LOGGER.warn("Notifier config {} had no valid targets; using defaults", configPath);
 			return defaults();
 		}
-		return new LoadResult(registry, file.verboseLogging);
+		return new LoadResult(registry, file.verboseLogging, file.highlightOnMatch);
 	}
 
-	private static ConfigFile toConfigFile(TargetRegistry registry, boolean verboseLogging) {
+	private static ConfigFile toConfigFile(TargetRegistry registry, boolean verboseLogging, boolean highlightOnMatch) {
 		ConfigFile file = new ConfigFile();
 		file.verboseLogging = verboseLogging;
+		file.highlightOnMatch = highlightOnMatch;
 		file.targets = registry.allTargets().stream().map(TargetEntry::fromTarget).toList();
 		return file;
 	}
@@ -94,14 +91,15 @@ public final class NotifierConfigStore {
 			100,
 			"A chicken is in the neighbourhood!"
 		));
-		return new LoadResult(registry, true);
+		return new LoadResult(registry, true, true);
 	}
 
-	public record LoadResult(TargetRegistry registry, boolean verboseLogging) {
+	public record LoadResult(TargetRegistry registry, boolean verboseLogging, boolean highlightOnMatch) {
 	}
 
 	private static final class ConfigFile {
 		boolean verboseLogging = true;
+		boolean highlightOnMatch = true;
 		List<TargetEntry> targets = new ArrayList<>();
 	}
 
