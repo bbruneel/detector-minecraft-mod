@@ -3,7 +3,8 @@
 	"package": "org.bruneel.notifier.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"MinecraftClientMixin"
+		"MinecraftClientMixin",
+		"RenderPipelinesAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

@@ -6,7 +6,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Box;
@@ -19,6 +18,7 @@ import org.bruneel.notifier.client.detect.DetectionRuntimeState;
 import org.bruneel.notifier.client.detect.NotifierConfigStore;
 import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
+import org.bruneel.notifier.client.render.NoDepthLineLayer;
 
 import java.util.List;
 import java.util.Objects;
@@ -102,7 +102,7 @@ public class NotifierModClient implements ClientModInitializer {
 		}
 
 		MatrixStack matrices = context.matrices();
-		VertexConsumer lines = context.consumers().getBuffer(RenderLayers.lines());
+		VertexConsumer lines = context.consumers().getBuffer(NoDepthLineLayer.LINES_NO_DEPTH);
 
 		if (worldTime - lastHighlightRenderDetailTick >= 20) {
 			lastHighlightRenderDetailTick = worldTime;
