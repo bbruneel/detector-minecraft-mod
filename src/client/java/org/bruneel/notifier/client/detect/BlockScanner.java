@@ -49,6 +49,8 @@ public final class BlockScanner {
 							pos.getX(),
 							pos.getY(),
 							pos.getZ(),
+							null,
+							null,
 							null
 						));
 						if (hits.size() >= limit) {

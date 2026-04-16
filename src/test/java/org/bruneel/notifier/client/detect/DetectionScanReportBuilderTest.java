@@ -4,6 +4,7 @@ import net.minecraft.util.Identifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,8 +13,26 @@ class DetectionScanReportBuilderTest {
 	@Test
 	void buildFormatsEntityAndBlockResultsWithCoordinates() {
 		List<DetectionScanHit> hits = List.of(
-			new DetectionScanHit(DetectionKind.ENTITY, Identifier.of("minecraft", "horse"), 10, 64, -3, 4.24),
-			new DetectionScanHit(DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), 11, 12, -4, null)
+			new DetectionScanHit(
+				DetectionKind.ENTITY,
+				Identifier.of("minecraft", "horse"),
+				10,
+				64,
+				-3,
+				4.24,
+				UUID.fromString("00000000-0000-0000-0000-000000000001"),
+				1
+			),
+			new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "diamond_ore"),
+				11,
+				12,
+				-4,
+				null,
+				null,
+				null
+			)
 		);
 
 		DetectionScanReportBuilder.ScanReport report = DetectionScanReportBuilder.build(hits, 2, 0, 20, 120);
@@ -27,11 +46,56 @@ class DetectionScanReportBuilderTest {
 	@Test
 	void buildAppliesPerTargetAndTotalOutputCaps() {
 		List<DetectionScanHit> hits = List.of(
-			new DetectionScanHit(DetectionKind.ENTITY, Identifier.of("minecraft", "horse"), 0, 64, 0, 1.0),
-			new DetectionScanHit(DetectionKind.ENTITY, Identifier.of("minecraft", "horse"), 1, 64, 0, 2.0),
-			new DetectionScanHit(DetectionKind.ENTITY, Identifier.of("minecraft", "horse"), 2, 64, 0, 3.0),
-			new DetectionScanHit(DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), 3, 11, 0, null),
-			new DetectionScanHit(DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), 4, 11, 0, null)
+			new DetectionScanHit(
+				DetectionKind.ENTITY,
+				Identifier.of("minecraft", "horse"),
+				0,
+				64,
+				0,
+				1.0,
+				UUID.fromString("00000000-0000-0000-0000-000000000001"),
+				1
+			),
+			new DetectionScanHit(
+				DetectionKind.ENTITY,
+				Identifier.of("minecraft", "horse"),
+				1,
+				64,
+				0,
+				2.0,
+				UUID.fromString("00000000-0000-0000-0000-000000000002"),
+				2
+			),
+			new DetectionScanHit(
+				DetectionKind.ENTITY,
+				Identifier.of("minecraft", "horse"),
+				2,
+				64,
+				0,
+				3.0,
+				UUID.fromString("00000000-0000-0000-0000-000000000003"),
+				3
+			),
+			new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "diamond_ore"),
+				3,
+				11,
+				0,
+				null,
+				null,
+				null
+			),
+			new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "diamond_ore"),
+				4,
+				11,
+				0,
+				null,
+				null,
+				null
+			)
 		);
 
 		DetectionScanReportBuilder.ScanReport report = DetectionScanReportBuilder.build(hits, 2, 0, 2, 3);

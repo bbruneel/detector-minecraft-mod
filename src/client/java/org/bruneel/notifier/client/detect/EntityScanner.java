@@ -44,7 +44,9 @@ public final class EntityScanner {
 				pos.getX(),
 				pos.getY(),
 				pos.getZ(),
-				(double) player.distanceTo(entity)
+				(double) player.distanceTo(entity),
+				entity.getUuid(),
+				entity.getId()
 			));
 		}
 		return hits;
