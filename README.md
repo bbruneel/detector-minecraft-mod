@@ -18,6 +18,9 @@ All commands are client-side and only affect your local client.
   - Lists configured targets and whether each one is enabled.
 - `/notifier detect scan`
   - Runs an immediate scan for all enabled targets and writes results to your local chat history.
+  - Also draws temporary world-space outlines for scan matches:
+    - entities in red
+    - blocks in blue
   - Example output:
     - `notifier: entity minecraft:horse at 120 66 -41 dist=7.2`
     - `notifier: block minecraft:diamond_ore at 126 10 -38`
@@ -46,11 +49,13 @@ All commands are client-side and only affect your local client.
   - cooldown counter
   - interval counter
 - Passive detections continue to use transient notifications; `/notifier detect scan` emits a persistent chat report.
+- Scan outlines from `/notifier detect scan` are temporary and fade automatically after roughly 6 seconds (`120` ticks).
 - Block scans are heavier than entity scans, so block defaults use a slower interval and smaller radius.
 
 ## Logging and Troubleshooting
 
 - Startup, command changes, and delivered notifications are logged at `info`.
+- Scan completion and highlight totals are logged at `info`.
 - Invalid command input and malformed config entries are logged at `warn`.
 - Config write failures are logged at `error`.
 - Verbose scan logs are controlled by `verboseLogging` in `config/notifier-client.json`.

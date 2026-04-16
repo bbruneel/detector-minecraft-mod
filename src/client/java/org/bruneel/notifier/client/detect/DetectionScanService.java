@@ -56,9 +56,9 @@ public final class DetectionScanService {
 			PER_TARGET_LIMIT,
 			TOTAL_LIMIT
 		);
-		return new ScanExecution(enabledTargets.size(), report);
+		return new ScanExecution(enabledTargets.size(), List.copyOf(hits), report);
 	}
 
-	public record ScanExecution(int enabledTargets, DetectionScanReportBuilder.ScanReport report) {
+	public record ScanExecution(int enabledTargets, List<DetectionScanHit> hits, DetectionScanReportBuilder.ScanReport report) {
 	}
 }
