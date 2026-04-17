@@ -55,6 +55,7 @@ public final class NotifierConfigStore {
 
 	private LoadResult fromConfigFile(ConfigFile file) {
 		TargetRegistry registry = new TargetRegistry();
+		int prunedDisabledTargets = 0;
 		if (file.targets != null) {
 			for (TargetEntry entry : file.targets) {
 				DetectionTarget target = entry.toTarget();
@@ -62,8 +63,19 @@ public final class NotifierConfigStore {
 					NotifierMod.LOGGER.warn("Skipping invalid notifier target entry in {}", configPath);
 					continue;
 				}
+				if (!target.enabled()) {
+					prunedDisabledTargets++;
+					continue;
+				}
 				registry.upsert(target);
 			}
+		}
+		if (prunedDisabledTargets > 0) {
+			NotifierMod.LOGGER.info(
+				"Pruned {} disabled notifier targets while loading {}",
+				prunedDisabledTargets,
+				configPath
+			);
 		}
 		if (registry.allTargets().isEmpty()) {
 			NotifierMod.LOGGER.warn("Notifier config {} had no valid targets; using defaults", configPath);
