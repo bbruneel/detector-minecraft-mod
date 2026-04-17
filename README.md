@@ -26,18 +26,25 @@ All commands are client-side and only affect your local client.
     - `notifier: block minecraft:diamond_ore at 126 10 -38`
 - `/notifier detect highlightOnMatch <true|false>`
   - When enabled (default `true`), the detector draws capped world-space outlines immediately when a passive detection match triggers (for the triggering target only).
-- `/notifier detect <kind> <id> <enabled>`
-  - Example entity: `/notifier detect entity minecraft:horse true`
-  - Example block: `/notifier detect block minecraft:diamond_ore true`
-- `/notifier detect radius <kind> <id> <value>`
+- `/notifier detect entity <id> <enabled>`
+  - Example: `/notifier detect entity minecraft:horse true`
+- `/notifier detect block <id> <enabled>`
+  - Example: `/notifier detect block minecraft:diamond_ore true`
+- `/notifier detect radius entity <id> <value>`
   - Example: `/notifier detect radius entity minecraft:horse 24`
-- `/notifier detect interval <kind> <id> <value>`
+- `/notifier detect radius block <id> <value>`
+  - Example: `/notifier detect radius block minecraft:diamond_ore 24`
+- `/notifier detect interval entity <id> <value>`
+  - Example: `/notifier detect interval entity minecraft:horse 40`
+- `/notifier detect interval block <id> <value>`
   - Example: `/notifier detect interval block minecraft:diamond_ore 40`
-- `/notifier detect cooldown <kind> <id> <value>`
+- `/notifier detect cooldown entity <id> <value>`
   - Example: `/notifier detect cooldown entity minecraft:horse 200`
+- `/notifier detect cooldown block <id> <value>`
+  - Example: `/notifier detect cooldown block minecraft:diamond_ore 200`
 
-`<kind>` must be `entity` or `block`.  
-`<id>` must be a valid Minecraft identifier.
+`entity` and `block` are explicit subcommands and tab-complete under `/notifier detect`.  
+`<id>` must be a valid Minecraft identifier and is tab-completed by kind (`entity` IDs for entity commands, block IDs for block commands).
 
 ## How Detection Works
 
