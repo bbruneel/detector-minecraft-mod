@@ -20,7 +20,7 @@ All commands are client-side and only affect your local client.
   - Runs an immediate scan for all enabled targets and writes results to your local chat history.
   - Also draws temporary world-space outlines for scan matches:
     - entities in red
-    - blocks in blue
+  - blocks in ore-specific colors when the block is a known ore; otherwise default blue
   - Example output:
     - `notifier: entity minecraft:horse at 120 66 -41 dist=7.2`
     - `notifier: block minecraft:diamond_ore at 126 10 -38`
@@ -54,6 +54,29 @@ All commands are client-side and only affect your local client.
 - Scan outlines from `/notifier detect scan` are temporary and fade automatically after roughly 60 seconds (`1200` ticks).
 - When `highlightOnMatch` is enabled, the detector also updates outlines on the passive edge-transition that triggers a notification (outlines are capped like the scan command and apply to the triggering target only).
 - Block scans are heavier than entity scans, so block defaults use a slower interval and smaller radius.
+
+### Highlight Color Overview
+
+Current highlight color behavior:
+
+- Entity highlights: fixed red.
+  - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#ff2626;"></span> `entity (default)`
+- Block highlights:
+  - Default fallback blue: <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#3373ff;"></span> `block (default fallback)`
+  - Ores use mapped colors:
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#40e6f2;"></span> `diamond_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#33f259;"></span> `emerald_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#ffd633;"></span> `gold_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#d69e73;"></span> `iron_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#e0804d;"></span> `copper_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#595959;"></span> `coal_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#f23333;"></span> `redstone_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#3373f2;"></span> `lapis_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#ebebeb;"></span> `nether_quartz_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#ffbf26;"></span> `nether_gold_ore`
+    - <span style="display:inline-block;width:12px;height:12px;border:1px solid #888;border-radius:2px;background:#995940;"></span> `ancient_debris`
+  - `deepslate_*` ores reuse the matching base ore color (for example `deepslate_redstone_ore` -> `redstone_ore` color).
+  - Non-ore blocks fall back to default block blue.
 
 ## Logging and Troubleshooting
 
