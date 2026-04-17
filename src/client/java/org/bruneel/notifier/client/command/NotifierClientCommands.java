@@ -3,10 +3,15 @@ package org.bruneel.notifier.client.command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
-import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
+import net.minecraft.command.CommandSource;
 import net.minecraft.command.argument.IdentifierArgumentType;
+import net.minecraft.registry.Registries;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.bruneel.notifier.NotifierMod;
@@ -18,6 +23,7 @@ import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
 
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
@@ -102,21 +108,34 @@ public final class NotifierClientCommands {
 					return 1;
 				})));
 
-			detectLiteral.then(ClientCommandManager.argument("kind", wordArg())
-				.then(ClientCommandManager.argument("id", identifierArg())
+			detectLiteral.then(kindLiteral(DetectionKind.ENTITY)
+				.then(idArgWithSuggestions(DetectionKind.ENTITY)
 					.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> {
-						String kindRaw = StringArgumentType.getString(ctx, "kind");
 						Identifier id = ctx.getArgument("id", Identifier.class);
 						boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
+						DetectionKind kind = DetectionKind.ENTITY;
 
-						DetectionKind kind;
-						try {
-							kind = DetectionCommandParser.parseKind(kindRaw);
-						} catch (RuntimeException ex) {
-							ctx.getSource().sendError(text("Invalid kind. Use 'entity' or 'block'."));
-							NotifierMod.LOGGER.warn("Rejecting detect command kind='{}' id='{}'", kindRaw, id);
-							return 0;
-						}
+						DetectionTarget existing = registry.find(kind, id.toString());
+						DetectionTarget next = existing != null
+							? existing.withEnabled(enabled)
+							: defaultTarget(kind, id, enabled);
+
+						registry.upsert(next);
+						configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+						ctx.getSource().sendFeedback(text(
+							"notifier: " + kind.name().toLowerCase() + " " + id + " enabled=" + enabled
+						));
+						NotifierMod.LOGGER.info("Command detect update kind={}, id={}, enabled={}", kind, id, enabled);
+						return 1;
+					}))));
+
+			detectLiteral.then(kindLiteral(DetectionKind.BLOCK)
+				.then(idArgWithSuggestions(DetectionKind.BLOCK)
+					.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> {
+						Identifier id = ctx.getArgument("id", Identifier.class);
+						boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
+						DetectionKind kind = DetectionKind.BLOCK;
 
 						DetectionTarget existing = registry.find(kind, id.toString());
 						DetectionTarget next = existing != null
@@ -134,11 +153,29 @@ public final class NotifierClientCommands {
 					}))));
 
 			detectLiteral.then(ClientCommandManager.literal("radius")
-				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", identifierArg())
+				.then(kindLiteral(DetectionKind.ENTITY)
+					.then(idArgWithSuggestions(DetectionKind.ENTITY)
 						.then(ClientCommandManager.argument("value", doubleArg(1.0, 64.0))
 							.executes(ctx -> {
-								DetectionTarget target = requireTarget(ctx, registry);
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.ENTITY);
+								if (target == null) {
+									return 0;
+								}
+
+								double value = DoubleArgumentType.getDouble(ctx, "value");
+								DetectionTarget updated = target.withRadius(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: radius updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect radius update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							}))))
+				.then(kindLiteral(DetectionKind.BLOCK)
+					.then(idArgWithSuggestions(DetectionKind.BLOCK)
+						.then(ClientCommandManager.argument("value", doubleArg(1.0, 64.0))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.BLOCK);
 								if (target == null) {
 									return 0;
 								}
@@ -154,11 +191,29 @@ public final class NotifierClientCommands {
 							})))));
 
 			detectLiteral.then(ClientCommandManager.literal("interval")
-				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", identifierArg())
+				.then(kindLiteral(DetectionKind.ENTITY)
+					.then(idArgWithSuggestions(DetectionKind.ENTITY)
 						.then(ClientCommandManager.argument("value", intArg(1, 1200))
 							.executes(ctx -> {
-								DetectionTarget target = requireTarget(ctx, registry);
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.ENTITY);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withCheckIntervalTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: interval updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect interval update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							}))))
+				.then(kindLiteral(DetectionKind.BLOCK)
+					.then(idArgWithSuggestions(DetectionKind.BLOCK)
+						.then(ClientCommandManager.argument("value", intArg(1, 1200))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.BLOCK);
 								if (target == null) {
 									return 0;
 								}
@@ -174,11 +229,29 @@ public final class NotifierClientCommands {
 							})))));
 
 			detectLiteral.then(ClientCommandManager.literal("cooldown")
-				.then(ClientCommandManager.argument("kind", wordArg())
-					.then(ClientCommandManager.argument("id", identifierArg())
+				.then(kindLiteral(DetectionKind.ENTITY)
+					.then(idArgWithSuggestions(DetectionKind.ENTITY)
 						.then(ClientCommandManager.argument("value", intArg(0, 72000))
 							.executes(ctx -> {
-								DetectionTarget target = requireTarget(ctx, registry);
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.ENTITY);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withCooldownTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: cooldown updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect cooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							}))))
+				.then(kindLiteral(DetectionKind.BLOCK)
+					.then(idArgWithSuggestions(DetectionKind.BLOCK)
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.BLOCK);
 								if (target == null) {
 									return 0;
 								}
@@ -223,20 +296,11 @@ public final class NotifierClientCommands {
 
 	@SuppressWarnings("null")
 	private static DetectionTarget requireTarget(
-		com.mojang.brigadier.context.CommandContext<net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource> ctx,
-		TargetRegistry registry
+		com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> ctx,
+		TargetRegistry registry,
+		DetectionKind kind
 	) {
-		String kindRaw = StringArgumentType.getString(ctx, "kind");
 		Identifier id = ctx.getArgument("id", Identifier.class);
-
-		DetectionKind kind;
-		try {
-			kind = DetectionCommandParser.parseKind(kindRaw);
-		} catch (RuntimeException ex) {
-			ctx.getSource().sendError(text("Invalid kind. Use 'entity' or 'block'."));
-			NotifierMod.LOGGER.warn("Rejecting detect tune command kind='{}' id='{}'", kindRaw, id);
-			return null;
-		}
 
 		DetectionTarget target = registry.find(kind, id.toString());
 		if (target == null) {
@@ -252,8 +316,49 @@ public final class NotifierClientCommands {
 		return Objects.requireNonNull(Text.literal(value));
 	}
 
-	private static StringArgumentType wordArg() {
-		return Objects.requireNonNull(StringArgumentType.word());
+	private static CompletableFuture<Suggestions> suggestEntityIds(
+		com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> ctx,
+		SuggestionsBuilder builder
+	) {
+		return CommandSource.suggestIdentifiers(suggestedIdsForKind(DetectionKind.ENTITY), builder);
+	}
+
+	private static CompletableFuture<Suggestions> suggestBlockIds(
+		com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> ctx,
+		SuggestionsBuilder builder
+	) {
+		return CommandSource.suggestIdentifiers(suggestedIdsForKind(DetectionKind.BLOCK), builder);
+	}
+
+	static Iterable<Identifier> suggestedIdsForKind(DetectionKind kind) {
+		return suggestedIdsForKind(kind, Registries.ENTITY_TYPE.getIds(), Registries.BLOCK.getIds());
+	}
+
+	static Iterable<Identifier> suggestedIdsForKind(
+		DetectionKind kind,
+		Iterable<Identifier> entityIds,
+		Iterable<Identifier> blockIds
+	) {
+		if (kind == DetectionKind.ENTITY) {
+			return entityIds;
+		}
+		if (kind == DetectionKind.BLOCK) {
+			return blockIds;
+		}
+		return java.util.List.of();
+	}
+
+	private static RequiredArgumentBuilder<FabricClientCommandSource, Identifier> idArgWithSuggestions(DetectionKind kind) {
+		RequiredArgumentBuilder<FabricClientCommandSource, Identifier> builder =
+			ClientCommandManager.argument("id", identifierArg());
+		if (kind == DetectionKind.ENTITY) {
+			return builder.suggests(NotifierClientCommands::suggestEntityIds);
+		}
+		return builder.suggests(NotifierClientCommands::suggestBlockIds);
+	}
+
+	private static com.mojang.brigadier.builder.LiteralArgumentBuilder<FabricClientCommandSource> kindLiteral(DetectionKind kind) {
+		return ClientCommandManager.literal(kind.name().toLowerCase());
 	}
 
 	private static IdentifierArgumentType identifierArg() {
