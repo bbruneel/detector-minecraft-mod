@@ -8,11 +8,25 @@ import org.bruneel.notifier.NotifierMod;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
 public final class ScanHighlightState {
 	public static final int DEFAULT_TTL_TICKS = 1200;
+	private static final Map<String, ScanHighlightColor> ORE_COLOR_BY_SUFFIX = Map.ofEntries(
+		Map.entry("diamond_ore", new ScanHighlightColor(0.25F, 0.9F, 0.95F, 1.0F)),
+		Map.entry("emerald_ore", new ScanHighlightColor(0.2F, 0.95F, 0.35F, 1.0F)),
+		Map.entry("gold_ore", new ScanHighlightColor(1.0F, 0.84F, 0.2F, 1.0F)),
+		Map.entry("iron_ore", new ScanHighlightColor(0.84F, 0.62F, 0.45F, 1.0F)),
+		Map.entry("copper_ore", new ScanHighlightColor(0.88F, 0.5F, 0.3F, 1.0F)),
+		Map.entry("coal_ore", new ScanHighlightColor(0.35F, 0.35F, 0.35F, 1.0F)),
+		Map.entry("redstone_ore", new ScanHighlightColor(0.95F, 0.2F, 0.2F, 1.0F)),
+		Map.entry("lapis_ore", new ScanHighlightColor(0.2F, 0.45F, 0.95F, 1.0F)),
+		Map.entry("nether_quartz_ore", new ScanHighlightColor(0.92F, 0.92F, 0.92F, 1.0F)),
+		Map.entry("nether_gold_ore", new ScanHighlightColor(1.0F, 0.75F, 0.15F, 1.0F)),
+		Map.entry("ancient_debris", new ScanHighlightColor(0.6F, 0.35F, 0.25F, 1.0F))
+	);
 
 	private final int ttlTicks;
 	private final List<ScanHighlight> highlights = new ArrayList<>();
@@ -36,7 +50,7 @@ public final class ScanHighlightState {
 		long expiresAt = worldTime + ttlTicks;
 
 		for (DetectionScanHit hit : hits) {
-			ScanHighlightColor color = colorFor(hit.kind());
+			ScanHighlightColor color = colorFor(hit);
 			if (hit.kind() == DetectionKind.ENTITY) {
 				entities++;
 			} else if (hit.kind() == DetectionKind.BLOCK) {
@@ -80,11 +94,28 @@ public final class ScanHighlightState {
 		return removed;
 	}
 
-	private static ScanHighlightColor colorFor(DetectionKind kind) {
-		return switch (kind) {
+	private static ScanHighlightColor colorFor(DetectionScanHit hit) {
+		return switch (hit.kind()) {
 			case ENTITY -> ScanHighlightColor.entityRed();
-			case BLOCK -> ScanHighlightColor.blockBlue();
+			case BLOCK -> blockColorFor(hit.id().getPath());
 		};
+	}
+
+	private static ScanHighlightColor blockColorFor(String blockPath) {
+		if (blockPath == null) {
+			return ScanHighlightColor.blockBlue();
+		}
+		ScanHighlightColor mapped = ORE_COLOR_BY_SUFFIX.get(blockPath);
+		if (mapped != null) {
+			return mapped;
+		}
+		if (blockPath.startsWith("deepslate_")) {
+			mapped = ORE_COLOR_BY_SUFFIX.get(blockPath.substring("deepslate_".length()));
+			if (mapped != null) {
+				return mapped;
+			}
+		}
+		return ScanHighlightColor.blockBlue();
 	}
 
 	public record HighlightBatchResult(int total, int entities, int blocks, int ttlTicks) {
