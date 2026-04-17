@@ -62,20 +62,23 @@ public final class DetectionEngine {
 
 		boolean nearby = nearbyCount > 0;
 		boolean wasNearby = state.wasNearby(key);
+		boolean shouldTrigger = shouldTrigger(nearby, wasNearby, cooldown);
 
 		if (verboseLogging) {
 			NotifierMod.LOGGER.info(
-				"Detect scan kind={}, id={}, count={}, nearby={}, wasNearby={}, cooldown={}",
+				"Detect trigger check key={}, kind={}, id={}, count={}, nearby={}, wasNearby={}, cooldown={}, shouldTrigger={}",
+				key,
 				target.kind(),
 				target.id(),
 				nearbyCount,
 				nearby,
 				wasNearby,
-				cooldown
+				cooldown,
+				shouldTrigger
 			);
 		}
 
-		if (shouldTrigger(nearby, wasNearby, cooldown)) {
+		if (shouldTrigger) {
 			player.sendMessage(Text.literal(target.messageTemplate()), true);
 			state.setCooldown(key, target.cooldownTicks());
 			NotifierMod.LOGGER.info("Detect message sent kind={}, id={}", target.kind(), target.id());
@@ -86,10 +89,19 @@ public final class DetectionEngine {
 					case ENTITY -> EntityScanner.findNearby(world, player, target, limit);
 					case BLOCK -> BlockScanner.findNearby(world, player, target, limit);
 				};
+				if (verboseLogging && hits.size() >= limit) {
+					NotifierMod.LOGGER.info(
+						"Detect highlight results reached per-target max kind={}, id={}, returnedHits={}, maxPerTarget={}, note=results_may_be_truncated",
+						target.kind(),
+						target.id(),
+						hits.size(),
+						DetectionScanService.PER_TARGET_LIMIT
+					);
+				}
 
-				var highlighted = scanHighlightState.replaceWithScanResults(hits, world.getTime());
+				var highlighted = scanHighlightState.upsertWithScanResults(hits, world.getTime());
 				NotifierMod.LOGGER.info(
-					"Detect highlight updated kind={}, id={}, entities={}, blocks={}, total={}",
+					"Detect highlight updated mode=upsert kind={}, id={}, entities={}, blocks={}, total={}",
 					target.kind(),
 					target.id(),
 					highlighted.entities(),

@@ -114,4 +114,41 @@ class ScanHighlightStateTest {
 		assertEquals(1, state.activeHighlights(14).size());
 		assertEquals(0, state.activeHighlights(15).size());
 	}
+
+	@Test
+	void upsertWithScanResultsKeepsExistingHighlightsAndAddsNewOnes() {
+		ScanHighlightState state = new ScanHighlightState(60);
+		state.upsertWithScanResults(
+			List.of(new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "diamond_ore"),
+				1,
+				2,
+				3,
+				null,
+				null,
+				null
+			)),
+			100
+		);
+
+		ScanHighlightState.HighlightBatchResult result = state.upsertWithScanResults(
+			List.of(new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "gold_ore"),
+				4,
+				5,
+				6,
+				null,
+				null,
+				null
+			)),
+			101
+		);
+
+		assertEquals(1, result.total());
+		assertEquals(0, result.entities());
+		assertEquals(1, result.blocks());
+		assertEquals(2, state.activeHighlights(101).size());
+	}
 }

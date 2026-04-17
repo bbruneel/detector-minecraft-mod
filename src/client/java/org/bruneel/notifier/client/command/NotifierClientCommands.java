@@ -105,7 +105,7 @@ public final class NotifierClientCommands {
 					execution.report().invalidTargets()
 				);
 				NotifierMod.LOGGER.info(
-					"Detect highlights updated entities={}, blocks={}, total={}, durationTicks={}",
+					"Detect highlights updated mode=replace entities={}, blocks={}, total={}, durationTicks={}",
 					highlighted.entities(),
 					highlighted.blocks(),
 					highlighted.total(),
