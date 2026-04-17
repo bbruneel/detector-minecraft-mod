@@ -44,36 +44,39 @@ public final class ScanHighlightState {
 
 	public HighlightBatchResult replaceWithScanResults(List<DetectionScanHit> hits, long worldTime) {
 		Objects.requireNonNull(hits, "hits");
+		List<ScanHighlight> next = buildHighlights(hits, worldTime);
 		int entities = 0;
 		int blocks = 0;
-		List<ScanHighlight> next = new ArrayList<>(hits.size());
-		long expiresAt = worldTime + ttlTicks;
-
-		for (DetectionScanHit hit : hits) {
-			ScanHighlightColor color = colorFor(hit);
-			if (hit.kind() == DetectionKind.ENTITY) {
+		for (ScanHighlight highlight : next) {
+			if (highlight.kind() == DetectionKind.ENTITY) {
 				entities++;
-			} else if (hit.kind() == DetectionKind.BLOCK) {
+			} else if (highlight.kind() == DetectionKind.BLOCK) {
 				blocks++;
-			} else {
-				NotifierMod.LOGGER.warn("Skipping unknown highlight kind={} for id={}", hit.kind(), hit.id());
-				continue;
 			}
-
-			BlockPos origin = new BlockPos(hit.x(), hit.y(), hit.z());
-			next.add(new ScanHighlight(
-				hit.kind(),
-				hit.id().toString(),
-				new Box(origin),
-				hit.entityUuid(),
-				hit.entityId(),
-				color,
-				expiresAt
-			));
 		}
 
 		highlights.clear();
 		highlights.addAll(next);
+		return new HighlightBatchResult(next.size(), entities, blocks, ttlTicks);
+	}
+
+	public HighlightBatchResult upsertWithScanResults(List<DetectionScanHit> hits, long worldTime) {
+		Objects.requireNonNull(hits, "hits");
+		pruneExpired(worldTime);
+
+		List<ScanHighlight> next = buildHighlights(hits, worldTime);
+		int entities = 0;
+		int blocks = 0;
+		for (ScanHighlight highlight : next) {
+			highlights.removeIf(existing -> sameHighlight(existing, highlight));
+			highlights.add(highlight);
+			if (highlight.kind() == DetectionKind.ENTITY) {
+				entities++;
+			} else if (highlight.kind() == DetectionKind.BLOCK) {
+				blocks++;
+			}
+		}
+
 		return new HighlightBatchResult(next.size(), entities, blocks, ttlTicks);
 	}
 
@@ -92,6 +95,42 @@ public final class ScanHighlightState {
 			}
 		}
 		return removed;
+	}
+
+	private List<ScanHighlight> buildHighlights(List<DetectionScanHit> hits, long worldTime) {
+		List<ScanHighlight> next = new ArrayList<>(hits.size());
+		long expiresAt = worldTime + ttlTicks;
+		for (DetectionScanHit hit : hits) {
+			ScanHighlightColor color = colorFor(hit);
+			if (hit.kind() != DetectionKind.ENTITY && hit.kind() != DetectionKind.BLOCK) {
+				NotifierMod.LOGGER.warn("Skipping unknown highlight kind={} for id={}", hit.kind(), hit.id());
+				continue;
+			}
+			BlockPos origin = new BlockPos(hit.x(), hit.y(), hit.z());
+			next.add(new ScanHighlight(
+				hit.kind(),
+				hit.id().toString(),
+				new Box(origin),
+				hit.entityUuid(),
+				hit.entityId(),
+				color,
+				expiresAt
+			));
+		}
+		return next;
+	}
+
+	private static boolean sameHighlight(ScanHighlight a, ScanHighlight b) {
+		return a.kind() == b.kind()
+			&& Objects.equals(a.targetId(), b.targetId())
+			&& Objects.equals(a.entityUuid(), b.entityUuid())
+			&& Objects.equals(a.entityId(), b.entityId())
+			&& Double.compare(a.box().minX, b.box().minX) == 0
+			&& Double.compare(a.box().minY, b.box().minY) == 0
+			&& Double.compare(a.box().minZ, b.box().minZ) == 0
+			&& Double.compare(a.box().maxX, b.box().maxX) == 0
+			&& Double.compare(a.box().maxY, b.box().maxY) == 0
+			&& Double.compare(a.box().maxZ, b.box().maxZ) == 0;
 	}
 
 	private static ScanHighlightColor colorFor(DetectionScanHit hit) {

@@ -103,14 +103,14 @@ public final class NotifierConfigStore {
 			100,
 			"A chicken is in the neighbourhood!"
 		));
-		return new LoadResult(registry, true, true);
+		return new LoadResult(registry, false, true);
 	}
 
 	public record LoadResult(TargetRegistry registry, boolean verboseLogging, boolean highlightOnMatch) {
 	}
 
 	private static final class ConfigFile {
-		boolean verboseLogging = true;
+		boolean verboseLogging = false;
 		boolean highlightOnMatch = true;
 		List<TargetEntry> targets = new ArrayList<>();
 	}

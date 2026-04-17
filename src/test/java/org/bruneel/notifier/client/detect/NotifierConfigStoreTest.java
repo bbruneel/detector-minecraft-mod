@@ -13,11 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NotifierConfigStoreTest {
 	@Test
-	void loadOrDefaultWhenMissingFile_defaultsHighlightOnMatchTrue(@TempDir Path tempDir) {
+	void loadOrDefaultWhenMissingFile_defaultsHighlightOnMatchTrueAndVerboseLoggingFalse(@TempDir Path tempDir) {
 		NotifierConfigStore store = new NotifierConfigStore(tempDir);
 
 		NotifierConfigStore.LoadResult result = store.loadOrDefault();
 		assertTrue(result.highlightOnMatch(), "Expected highlightOnMatch to default to true when config is missing");
+		assertFalse(result.verboseLogging(), "Expected verboseLogging to default to false when config is missing");
 	}
 
 	@Test
