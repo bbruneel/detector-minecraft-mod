@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ScanHighlightStateTest {
 	@Test
-	void replaceWithScanResultsAssignsColorsByKind() {
+	void replaceWithScanResultsAssignsColorsByKindAndOreType() {
 		ScanHighlightState state = new ScanHighlightState(60);
 		List<DetectionScanHit> hits = List.of(
 			new DetectionScanHit(
@@ -43,7 +43,55 @@ class ScanHighlightStateTest {
 		assertEquals(60, result.ttlTicks());
 		assertEquals(2, state.activeHighlights(100).size());
 		assertEquals(1.0F, state.activeHighlights(100).get(0).color().red());
-		assertEquals(1.0F, state.activeHighlights(100).get(1).color().blue());
+		assertEquals(0.25F, state.activeHighlights(100).get(1).color().red());
+		assertEquals(0.9F, state.activeHighlights(100).get(1).color().green());
+		assertEquals(0.95F, state.activeHighlights(100).get(1).color().blue());
+	}
+
+	@Test
+	void replaceWithScanResultsUsesDefaultBlockColorForNonOreBlocks() {
+		ScanHighlightState state = new ScanHighlightState(60);
+		state.replaceWithScanResults(
+			List.of(new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "stone"),
+				1,
+				2,
+				3,
+				null,
+				null,
+				null
+			)),
+			20
+		);
+
+		ScanHighlightState.ScanHighlightColor color = state.activeHighlights(20).getFirst().color();
+		assertEquals(0.2F, color.red());
+		assertEquals(0.45F, color.green());
+		assertEquals(1.0F, color.blue());
+	}
+
+	@Test
+	void replaceWithScanResultsUsesDeepslateOreColorMapping() {
+		ScanHighlightState state = new ScanHighlightState(60);
+		state.replaceWithScanResults(
+			List.of(new DetectionScanHit(
+				DetectionKind.BLOCK,
+				Identifier.of("minecraft", "deepslate_redstone_ore"),
+				1,
+				2,
+				3,
+				null,
+				null,
+				null
+			)),
+			20
+		);
+
+		ScanHighlightState.ScanHighlightColor color = state.activeHighlights(20).getFirst().color();
+		assertEquals(0.95F, color.red());
+		assertEquals(0.2F, color.green());
+		assertEquals(0.2F, color.blue());
 	}
 
 	@Test
