@@ -5,6 +5,7 @@ import org.bruneel.notifier.client.detect.DetectionKind;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class NotifierClientCommandsSuggestionTest {
@@ -38,6 +39,23 @@ class NotifierClientCommandsSuggestionTest {
 			java.util.List.of(Identifier.of("minecraft:stone"))
 		).iterator().hasNext();
 		assertFalse(hasAny);
+	}
+
+	@Test
+	void allOreIdsFromRegistryFiltersMinecraftOreLikeBlocks() {
+		var result = NotifierClientCommands.allOreIdsFromRegistry(java.util.List.of(
+			Identifier.of("minecraft:stone"),
+			Identifier.of("minecraft:diamond_ore"),
+			Identifier.of("minecraft:deepslate_redstone_ore"),
+			Identifier.of("minecraft:ancient_debris"),
+			Identifier.of("example:tin_ore")
+		));
+
+		assertEquals(java.util.List.of(
+			Identifier.of("minecraft:ancient_debris"),
+			Identifier.of("minecraft:deepslate_redstone_ore"),
+			Identifier.of("minecraft:diamond_ore")
+		), result);
 	}
 
 	private static boolean contains(Iterable<Identifier> ids, String expectedId) {

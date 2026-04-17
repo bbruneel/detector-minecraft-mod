@@ -22,12 +22,28 @@ import org.bruneel.notifier.client.detect.NotifierConfigStore;
 import org.bruneel.notifier.client.detect.ScanHighlightState;
 import org.bruneel.notifier.client.detect.TargetRegistry;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
 public final class NotifierClientCommands {
+	private static final List<Identifier> PRECIOUS_ORE_IDS = List.of(
+		Identifier.of("minecraft", "diamond_ore"),
+		Identifier.of("minecraft", "ancient_debris")
+	);
+	private static final List<Identifier> ESSENTIAL_ORE_IDS = List.of(
+		Identifier.of("minecraft", "diamond_ore"),
+		Identifier.of("minecraft", "ancient_debris"),
+		Identifier.of("minecraft", "iron_ore"),
+		Identifier.of("minecraft", "gold_ore"),
+		Identifier.of("minecraft", "redstone_ore"),
+		Identifier.of("minecraft", "lapis_ore")
+	);
+
 	private NotifierClientCommands() {
 	}
 
@@ -97,6 +113,72 @@ public final class NotifierClientCommands {
 				);
 				return 1;
 			}));
+
+			detectLiteral.then(ClientCommandManager.literal("precious_ores")
+				.executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"precious_ores",
+					PRECIOUS_ORE_IDS,
+					true
+				))
+				.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"precious_ores",
+					PRECIOUS_ORE_IDS,
+					BoolArgumentType.getBool(ctx, "enabled")
+				))));
+
+			detectLiteral.then(ClientCommandManager.literal("essential_ores")
+				.executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"essential_ores",
+					ESSENTIAL_ORE_IDS,
+					true
+				))
+				.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"essential_ores",
+					ESSENTIAL_ORE_IDS,
+					BoolArgumentType.getBool(ctx, "enabled")
+				))));
+
+			detectLiteral.then(ClientCommandManager.literal("all_ores")
+				.executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"all_ores",
+					allOreIdsFromRegistry(Registries.BLOCK.getIds()),
+					true
+				))
+				.then(ClientCommandManager.argument("enabled", boolArg()).executes(ctx -> applyPresetCommand(
+					ctx.getSource(),
+					registry,
+					configStore,
+					verboseLoggingSupplier,
+					highlightOnMatchRef,
+					"all_ores",
+					allOreIdsFromRegistry(Registries.BLOCK.getIds()),
+					BoolArgumentType.getBool(ctx, "enabled")
+				))));
 
 			detectLiteral.then(ClientCommandManager.literal("highlightOnMatch")
 				.then(ClientCommandManager.argument("value", boolArg()).executes(ctx -> {
@@ -316,6 +398,73 @@ public final class NotifierClientCommands {
 		return Objects.requireNonNull(Text.literal(value));
 	}
 
+	private static int applyPresetCommand(
+		FabricClientCommandSource source,
+		TargetRegistry registry,
+		NotifierConfigStore configStore,
+		BooleanSupplier verboseLoggingSupplier,
+		AtomicBoolean highlightOnMatchRef,
+		String presetName,
+		Iterable<Identifier> ids,
+		boolean enabled
+	) {
+		return applyPreset(
+			source,
+			registry,
+			configStore,
+			verboseLoggingSupplier,
+			highlightOnMatchRef,
+			presetName,
+			ids,
+			enabled
+		);
+	}
+
+	private static int applyPreset(
+		FabricClientCommandSource source,
+		TargetRegistry registry,
+		NotifierConfigStore configStore,
+		BooleanSupplier verboseLoggingSupplier,
+		AtomicBoolean highlightOnMatchRef,
+		String presetName,
+		Iterable<Identifier> ids,
+		boolean enabled
+	) {
+		int added = 0;
+		int changed = 0;
+		for (Identifier id : ids) {
+			DetectionTarget existing = registry.find(DetectionKind.BLOCK, id.toString());
+			DetectionTarget next;
+			if (existing == null) {
+				if (!enabled) {
+					continue;
+				}
+				next = defaultTarget(DetectionKind.BLOCK, id, true);
+				added++;
+				changed++;
+			} else {
+				next = existing.withEnabled(enabled);
+				if (existing.enabled() != enabled) {
+					changed++;
+				}
+			}
+			registry.upsert(next);
+		}
+
+		configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+		source.sendFeedback(text(
+			"notifier: preset " + presetName + " applied; value=" + enabled + " changed=" + changed + " added=" + added
+		));
+		NotifierMod.LOGGER.info(
+			"Command detect preset applied name={}, value={}, changed={}, added={}",
+			presetName,
+			enabled,
+			changed,
+			added
+		);
+		return 1;
+	}
+
 	private static CompletableFuture<Suggestions> suggestEntityIds(
 		com.mojang.brigadier.context.CommandContext<FabricClientCommandSource> ctx,
 		SuggestionsBuilder builder
@@ -332,6 +481,21 @@ public final class NotifierClientCommands {
 
 	static Iterable<Identifier> suggestedIdsForKind(DetectionKind kind) {
 		return suggestedIdsForKind(kind, Registries.ENTITY_TYPE.getIds(), Registries.BLOCK.getIds());
+	}
+
+	static List<Identifier> allOreIdsFromRegistry(Iterable<Identifier> blockIds) {
+		List<Identifier> ores = new ArrayList<>();
+		for (Identifier id : blockIds) {
+			if (!"minecraft".equals(id.getNamespace())) {
+				continue;
+			}
+			String path = id.getPath();
+			if (path.endsWith("_ore") || "ancient_debris".equals(path)) {
+				ores.add(id);
+			}
+		}
+		ores.sort(Comparator.comparing(Identifier::toString));
+		return List.copyOf(ores);
 	}
 
 	static Iterable<Identifier> suggestedIdsForKind(

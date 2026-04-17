@@ -24,6 +24,16 @@ All commands are client-side and only affect your local client.
   - Example output:
     - `notifier: entity minecraft:horse at 120 66 -41 dist=7.2`
     - `notifier: block minecraft:diamond_ore at 126 10 -38`
+- Convenience presets:
+  - `/notifier detect precious_ores [<true|false>]`
+    - Enables block detection for `minecraft:diamond_ore` and `minecraft:ancient_debris`.
+    - Use `false` to disable the same group (example: `/notifier detect precious_ores false`).
+  - `/notifier detect essential_ores [<true|false>]`
+    - Enables `precious_ores` plus `minecraft:iron_ore`, `minecraft:gold_ore`, `minecraft:redstone_ore`, and `minecraft:lapis_ore`.
+    - Use `false` to disable the same group.
+  - `/notifier detect all_ores [<true|false>]`
+    - Enables all Minecraft ore-like block IDs (`*_ore` plus `ancient_debris`).
+    - Use `false` to disable the same group.
 - `/notifier detect highlightOnMatch <true|false>`
   - When enabled (default `true`), the detector draws capped world-space outlines immediately when a passive detection match triggers (for the triggering target only).
 - `/notifier detect entity <id> <enabled>`
