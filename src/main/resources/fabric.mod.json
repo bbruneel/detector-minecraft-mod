@@ -1,8 +1,8 @@
 {
 	"schemaVersion": 1,
-	"id": "notifier",
+	"id": "detector",
 	"version": "${version}",
-	"name": "Notifier",
+	"name": "Detector",
 	"description": "Shows clear in-game notifications for important gameplay and server events.",
 	"authors": [
 		"Me!"
@@ -12,20 +12,20 @@
 		"sources": "https://github.com/bbruneel/my-first-minecraft-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/notifier/icon.png",
+	"icon": "assets/detector/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"org.bruneel.notifier.NotifierMod"
+			"org.bruneel.detector.DetectorMod"
 		],
 		"client": [
-			"org.bruneel.notifier.client.NotifierModClient"
+			"org.bruneel.detector.client.DetectorModClient"
 		]
 	},
 	"mixins": [
-		"notifier.mixins.json",
+		"detector.mixins.json",
 		{
-			"config": "notifier.client.mixins.json",
+			"config": "detector.client.mixins.json",
 			"environment": "client"
 		}
 	],

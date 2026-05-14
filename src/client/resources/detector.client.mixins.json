@@ -1,0 +1,15 @@
+{
+	"required": true,
+	"package": "org.bruneel.detector.client.mixin",
+	"compatibilityLevel": "JAVA_21",
+	"client": [
+		"MinecraftClientMixin",
+		"RenderPipelinesAccessor"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	},
+	"overwrites": {
+		"requireAnnotations": true
+	}
+}

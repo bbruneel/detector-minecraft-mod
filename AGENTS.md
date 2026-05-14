@@ -25,19 +25,19 @@ If any file conflicts with these constraints (for example Java 25 settings), tre
 
 ## Current Project Layout
 
-- `src/main/java/org/bruneel/notifier/NotifierMod.java` - main Fabric mod initializer.
-- `src/client/java/org/bruneel/notifier/client/NotifierModClient.java` - client-only initializer.
-- `src/client/java/org/bruneel/notifier/client/command/NotifierClientCommands.java` - client command registration (`/notifier detect ...`).
-- `src/client/java/org/bruneel/notifier/client/detect/` - detection models, scanners, config persistence, and engine.
-- `src/main/java/org/bruneel/notifier/mixin/ServerLifecycleMixin.java` - server mixin.
-- `src/client/java/org/bruneel/notifier/client/mixin/MinecraftClientMixin.java` - client mixin.
-- `src/test/java/org/bruneel/notifier/client/detect/` - unit tests for detection state/registry/parsing.
+- `src/main/java/org/bruneel/detector/DetectorMod.java` - main Fabric mod initializer.
+- `src/client/java/org/bruneel/detector/client/DetectorModClient.java` - client-only initializer.
+- `src/client/java/org/bruneel/detector/client/command/DetectorClientCommands.java` - client command registration (`/detector ...`).
+- `src/client/java/org/bruneel/detector/client/detect/` - detection models, scanners, config persistence, and engine.
+- `src/main/java/org/bruneel/detector/mixin/ServerLifecycleMixin.java` - server mixin.
+- `src/client/java/org/bruneel/detector/client/mixin/MinecraftClientMixin.java` - client mixin.
+- `src/test/java/org/bruneel/detector/client/detect/` - unit tests for detection state/registry/parsing.
 - `src/main/resources/fabric.mod.json` - mod metadata and entrypoints.
-- `src/main/resources/notifier.mixins.json` - common mixin config.
-- `src/client/resources/notifier.client.mixins.json` - client mixin config.
+- `src/main/resources/detector.mixins.json` - common mixin config.
+- `src/client/resources/detector.client.mixins.json` - client mixin config.
 - `.github/workflows/build.yml` - CI build pipeline.
 
-Note: keep naming aligned to `notifier` and `org.bruneel.notifier` for future additions.
+Note: keep naming aligned to `detector` and `org.bruneel.detector` for future additions.
 
 ## Agent Workflow
 
