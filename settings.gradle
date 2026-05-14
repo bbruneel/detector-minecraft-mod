@@ -10,4 +10,4 @@ pluginManagement {
 }
 
 // Should match your mod id
-rootProject.name = 'notifier'
+rootProject.name = 'detector'
