@@ -13,8 +13,8 @@ class TargetRegistryTest {
 	void upsertReplacesExistingTarget() {
 		TargetRegistry registry = new TargetRegistry();
 		Identifier id = Identifier.of("minecraft", "horse");
-		registry.upsert(new DetectionTarget(DetectionKind.ENTITY, id, true, 16.0, 10, 100, "one"));
-		registry.upsert(new DetectionTarget(DetectionKind.ENTITY, id, false, 20.0, 20, 200, "two"));
+		registry.upsert(new DetectionTarget(DetectionKind.ENTITY, id, true, 16.0, 10, 300, 100, "one"));
+		registry.upsert(new DetectionTarget(DetectionKind.ENTITY, id, false, 20.0, 20, 600, 200, "two"));
 
 		assertEquals(1, registry.allTargets().size());
 		DetectionTarget target = registry.find(DetectionKind.ENTITY, "minecraft:horse");
@@ -27,10 +27,10 @@ class TargetRegistryTest {
 	void enabledTargetsFiltersDisabledEntries() {
 		TargetRegistry registry = new TargetRegistry();
 		registry.upsert(new DetectionTarget(
-			DetectionKind.ENTITY, Identifier.of("minecraft", "cow"), true, 16.0, 10, 100, "cow"
+			DetectionKind.ENTITY, Identifier.of("minecraft", "cow"), true, 16.0, 10, 300, 100, "cow"
 		));
 		registry.upsert(new DetectionTarget(
-			DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), false, 8.0, 30, 120, "ore"
+			DetectionKind.BLOCK, Identifier.of("minecraft", "diamond_ore"), false, 8.0, 30, 360, 120, "ore"
 		));
 
 		assertEquals(2, registry.allTargets().size());

@@ -101,6 +101,7 @@ public final class NotifierConfigStore {
 			16.0,
 			10,
 			100,
+			20,
 			"A chicken is in the neighbourhood!"
 		));
 		return new LoadResult(registry, false, true);
@@ -121,7 +122,9 @@ public final class NotifierConfigStore {
 		boolean enabled;
 		double radius;
 		int checkIntervalTicks;
-		int cooldownTicks;
+		Integer cooldownTicks;
+		Integer messageCooldownTicks;
+		Integer highlightCooldownTicks;
 		String messageTemplate;
 
 		static TargetEntry fromTarget(DetectionTarget target) {
@@ -131,7 +134,8 @@ public final class NotifierConfigStore {
 			entry.enabled = target.enabled();
 			entry.radius = target.radius();
 			entry.checkIntervalTicks = target.checkIntervalTicks();
-			entry.cooldownTicks = target.cooldownTicks();
+			entry.messageCooldownTicks = target.messageCooldownTicks();
+			entry.highlightCooldownTicks = target.highlightCooldownTicks();
 			entry.messageTemplate = target.messageTemplate();
 			return entry;
 		}
@@ -142,7 +146,15 @@ public final class NotifierConfigStore {
 				Identifier parsedId = Identifier.of(id);
 				double safeRadius = radius > 0 ? radius : 16.0;
 				int safeInterval = Math.max(1, checkIntervalTicks);
-				int safeCooldown = Math.max(0, cooldownTicks);
+				int fallbackCooldown = Math.max(0, cooldownTicks != null ? cooldownTicks : 100);
+				int safeHighlightCooldown = Math.max(
+					0,
+					highlightCooldownTicks != null ? highlightCooldownTicks : fallbackCooldown
+				);
+				int safeMessageCooldown = Math.max(
+					0,
+					messageCooldownTicks != null ? messageCooldownTicks : Math.max(safeHighlightCooldown * 3, 100)
+				);
 				String safeMessage = messageTemplate != null && !messageTemplate.isBlank()
 					? messageTemplate
 					: "Detected " + parsedId;
@@ -152,7 +164,8 @@ public final class NotifierConfigStore {
 					enabled,
 					safeRadius,
 					safeInterval,
-					safeCooldown,
+					safeMessageCooldown,
+					safeHighlightCooldown,
 					safeMessage
 				);
 			} catch (RuntimeException ex) {

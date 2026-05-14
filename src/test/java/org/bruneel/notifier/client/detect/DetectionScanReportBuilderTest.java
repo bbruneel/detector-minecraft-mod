@@ -124,6 +124,7 @@ class DetectionScanReportBuilderTest {
 			true,
 			16.0,
 			10,
+			300,
 			100,
 			"horse"
 		));
@@ -133,6 +134,7 @@ class DetectionScanReportBuilderTest {
 			false,
 			8.0,
 			30,
+			360,
 			120,
 			"ore"
 		));

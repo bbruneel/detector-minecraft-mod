@@ -87,7 +87,7 @@ Default approach:
 
 Rules:
 
-- If functionality is available via `java.*` / `java.net.http`, prefer that.
+- If functionality is available via `java.`* / `java.net.http`, prefer that.
 - If adding non-Fabric libraries that ship in the mod jar, **shade + relocate** them.
 - Avoid pulling large transitive dependency trees for simple tasks.
 - Keep dependency count and jar size in PR notes when dependencies change.

@@ -34,7 +34,8 @@ class NotifierConfigStoreTest {
 			      "enabled": true,
 			      "radius": 16.0,
 			      "checkIntervalTicks": 10,
-			      "cooldownTicks": 100,
+			      "messageCooldownTicks": 300,
+			      "highlightCooldownTicks": 100,
 			      "messageTemplate": "test"
 			    }
 			  ]
@@ -59,6 +60,7 @@ class NotifierConfigStoreTest {
 			true,
 			16.0,
 			10,
+			300,
 			100,
 			"test"
 		));
