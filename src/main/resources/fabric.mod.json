@@ -9,7 +9,7 @@
 	],
 	"contact": {
 		"homepage": "https://bruneel.org/",
-		"sources": "https://github.com/bbruneel/my-first-minecraft-mod"
+		"sources": "https://github.com/bbruneel/detector-minecraft-mod"
 	},
 	"license": "CC0-1.0",
 	"icon": "assets/detector/icon.png",
