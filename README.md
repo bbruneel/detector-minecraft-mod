@@ -1,6 +1,6 @@
 # Detector
 
-Detector is a Fabric client-side mod for Minecraft `1.21.x` that sends proximity alerts when configured entities or blocks are nearby.
+Detector is a Fabric client-side mod for Minecraft `1.21.x` that sends proximity alerts, and outlines, when configured entities or blocks are nearby.
 
 ## What It Does
 
