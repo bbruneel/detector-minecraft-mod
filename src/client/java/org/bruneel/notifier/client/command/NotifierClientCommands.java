@@ -65,7 +65,8 @@ public final class NotifierClientCommands {
 						target.kind() + " " + target.id() + " enabled=" + target.enabled()
 							+ " radius=" + target.radius()
 							+ " interval=" + target.checkIntervalTicks()
-							+ " cooldown=" + target.cooldownTicks()
+							+ " messageCooldown=" + target.messageCooldownTicks()
+							+ " highlightCooldown=" + target.highlightCooldownTicks()
 					));
 				}
 				return 1;
@@ -325,8 +326,16 @@ public final class NotifierClientCommands {
 								registry.upsert(updated);
 								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
-								ctx.getSource().sendFeedback(text("notifier: cooldown updated for " + target.id() + " -> " + value));
-								NotifierMod.LOGGER.info("Command detect cooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								ctx.getSource().sendFeedback(text(
+									"notifier: legacy cooldown updated for " + target.id()
+										+ " -> " + value + " (applied to messageCooldown + highlightCooldown)"
+								));
+								NotifierMod.LOGGER.info(
+									"Command detect cooldown update kind={}, id={}, value={}, mode=legacy_both",
+									target.kind(),
+									target.id(),
+									value
+								);
 								return 1;
 							}))))
 				.then(kindLiteral(DetectionKind.BLOCK)
@@ -343,8 +352,92 @@ public final class NotifierClientCommands {
 								registry.upsert(updated);
 								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
 
-								ctx.getSource().sendFeedback(text("notifier: cooldown updated for " + target.id() + " -> " + value));
-								NotifierMod.LOGGER.info("Command detect cooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								ctx.getSource().sendFeedback(text(
+									"notifier: legacy cooldown updated for " + target.id()
+										+ " -> " + value + " (applied to messageCooldown + highlightCooldown)"
+								));
+								NotifierMod.LOGGER.info(
+									"Command detect cooldown update kind={}, id={}, value={}, mode=legacy_both",
+									target.kind(),
+									target.id(),
+									value
+								);
+								return 1;
+							})))));
+
+			detectLiteral.then(ClientCommandManager.literal("messageCooldown")
+				.then(kindLiteral(DetectionKind.ENTITY)
+					.then(idArgWithSuggestions(DetectionKind.ENTITY)
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.ENTITY);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withMessageCooldownTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: messageCooldown updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect messageCooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							}))))
+				.then(kindLiteral(DetectionKind.BLOCK)
+					.then(idArgWithSuggestions(DetectionKind.BLOCK)
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.BLOCK);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withMessageCooldownTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: messageCooldown updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect messageCooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							})))));
+
+			detectLiteral.then(ClientCommandManager.literal("highlightCooldown")
+				.then(kindLiteral(DetectionKind.ENTITY)
+					.then(idArgWithSuggestions(DetectionKind.ENTITY)
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.ENTITY);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withHighlightCooldownTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: highlightCooldown updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect highlightCooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
+								return 1;
+							}))))
+				.then(kindLiteral(DetectionKind.BLOCK)
+					.then(idArgWithSuggestions(DetectionKind.BLOCK)
+						.then(ClientCommandManager.argument("value", intArg(0, 72000))
+							.executes(ctx -> {
+								DetectionTarget target = requireTarget(ctx, registry, DetectionKind.BLOCK);
+								if (target == null) {
+									return 0;
+								}
+
+								int value = IntegerArgumentType.getInteger(ctx, "value");
+								DetectionTarget updated = target.withHighlightCooldownTicks(value);
+								registry.upsert(updated);
+								configStore.save(registry, verboseLoggingSupplier.getAsBoolean(), highlightOnMatchRef.get());
+
+								ctx.getSource().sendFeedback(text("notifier: highlightCooldown updated for " + target.id() + " -> " + value));
+								NotifierMod.LOGGER.info("Command detect highlightCooldown update kind={}, id={}, value={}", target.kind(), target.id(), value);
 								return 1;
 							})))));
 
@@ -360,6 +453,7 @@ public final class NotifierClientCommands {
 				enabled,
 				8.0,
 				30,
+				240,
 				120,
 				"Detected block nearby: " + id
 			);
@@ -371,6 +465,7 @@ public final class NotifierClientCommands {
 			enabled,
 			16.0,
 			10,
+			200,
 			100,
 			"Detected entity nearby: " + id
 		);

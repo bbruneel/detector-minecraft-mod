@@ -4,26 +4,28 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class DetectionRuntimeState {
-	private final Map<String, Boolean> wasNearbyByKey = new HashMap<>();
-	private final Map<String, Integer> cooldownByKey = new HashMap<>();
+	private final Map<String, Integer> messageCooldownByKey = new HashMap<>();
+	private final Map<String, Integer> highlightCooldownByKey = new HashMap<>();
 	private final Map<String, Integer> intervalCounterByKey = new HashMap<>();
 
-	public boolean wasNearby(String key) {
-		return wasNearbyByKey.getOrDefault(key, false);
-	}
-
-	public void setWasNearby(String key, boolean value) {
-		wasNearbyByKey.put(key, value);
-	}
-
-	public int tickCooldown(String key) {
-		int next = Math.max(0, cooldownByKey.getOrDefault(key, 0) - 1);
-		cooldownByKey.put(key, next);
+	public int tickMessageCooldown(String key) {
+		int next = Math.max(0, messageCooldownByKey.getOrDefault(key, 0) - 1);
+		messageCooldownByKey.put(key, next);
 		return next;
 	}
 
-	public void setCooldown(String key, int value) {
-		cooldownByKey.put(key, Math.max(0, value));
+	public void setMessageCooldown(String key, int value) {
+		messageCooldownByKey.put(key, Math.max(0, value));
+	}
+
+	public int tickHighlightCooldown(String key) {
+		int next = Math.max(0, highlightCooldownByKey.getOrDefault(key, 0) - 1);
+		highlightCooldownByKey.put(key, next);
+		return next;
+	}
+
+	public void setHighlightCooldown(String key, int value) {
+		highlightCooldownByKey.put(key, Math.max(0, value));
 	}
 
 	public int nextIntervalCount(String key) {

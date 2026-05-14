@@ -6,13 +6,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class DetectionRuntimeStateTest {
 	@Test
-	void tickCooldownDecrementsUntilZero() {
+	void messageAndHighlightCooldownsDecrementUntilZero() {
 		DetectionRuntimeState state = new DetectionRuntimeState();
-		state.setCooldown("k", 2);
+		state.setMessageCooldown("k", 2);
+		state.setHighlightCooldown("k", 1);
 
-		assertEquals(1, state.tickCooldown("k"));
-		assertEquals(0, state.tickCooldown("k"));
-		assertEquals(0, state.tickCooldown("k"));
+		assertEquals(1, state.tickMessageCooldown("k"));
+		assertEquals(0, state.tickMessageCooldown("k"));
+		assertEquals(0, state.tickMessageCooldown("k"));
+
+		assertEquals(0, state.tickHighlightCooldown("k"));
+		assertEquals(0, state.tickHighlightCooldown("k"));
 	}
 
 	@Test

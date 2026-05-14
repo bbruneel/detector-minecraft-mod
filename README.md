@@ -6,7 +6,7 @@ Notifier is a Fabric client-side mod for Minecraft `1.21.x` that sends proximity
 
 - Scans around the local player for configured detection targets.
 - Supports both entity targets (for example `minecraft:horse`) and block targets (for example `minecraft:diamond_ore`).
-- Triggers alerts on edge transitions (when a target enters range), then applies a per-target cooldown.
+- Re-triggers while a target remains nearby, with independent cooldowns for toast messages and highlight refreshes.
 - Supports on-demand scan reports in persistent local chat so results stay visible for review.
 - Stores client preferences in `config/notifier-client.json`.
 
@@ -48,10 +48,16 @@ All commands are client-side and only affect your local client.
   - Example: `/notifier detect interval entity minecraft:horse 40`
 - `/notifier detect interval block <id> <value>`
   - Example: `/notifier detect interval block minecraft:diamond_ore 40`
-- `/notifier detect cooldown entity <id> <value>`
-  - Example: `/notifier detect cooldown entity minecraft:horse 200`
-- `/notifier detect cooldown block <id> <value>`
-  - Example: `/notifier detect cooldown block minecraft:diamond_ore 200`
+- `/notifier detect messageCooldown entity <id> <value>`
+  - Example: `/notifier detect messageCooldown entity minecraft:horse 300`
+- `/notifier detect messageCooldown block <id> <value>`
+  - Example: `/notifier detect messageCooldown block minecraft:diamond_ore 300`
+- `/notifier detect highlightCooldown entity <id> <value>`
+  - Example: `/notifier detect highlightCooldown entity minecraft:horse 80`
+- `/notifier detect highlightCooldown block <id> <value>`
+  - Example: `/notifier detect highlightCooldown block minecraft:diamond_ore 80`
+- `/notifier detect cooldown <kind> <id> <value>`
+  - Legacy alias that sets both `messageCooldown` and `highlightCooldown` to the same value.
 
 `entity` and `block` are explicit subcommands and tab-complete under `/notifier detect`.  
 `<id>` must be a valid Minecraft identifier and is tab-completed by kind (`entity` IDs for entity commands, block IDs for block commands).
@@ -61,15 +67,17 @@ All commands are client-side and only affect your local client.
 - Each target has:
   - `radius`
   - `checkIntervalTicks`
-  - `cooldownTicks`
+  - `messageCooldownTicks`
+  - `highlightCooldownTicks`
   - `messageTemplate`
 - The detector keeps runtime state per target:
-  - `wasNearby` for edge-trigger behavior
-  - cooldown counter
+  - message cooldown counter (gates toast frequency)
+  - highlight cooldown counter (gates highlight refresh frequency)
   - interval counter
+- Triggering is cooldown-gated rather than edge-triggered: while the player remains nearby, message and highlight updates each re-trigger on their own cadence. Leaving the radius stops triggering immediately; returning triggers as soon as each cooldown has expired.
 - Passive detections continue to use transient notifications; `/notifier detect scan` emits a persistent chat report.
 - Scan outlines from `/notifier detect scan` are temporary and fade automatically after roughly 60 seconds (`1200` ticks).
-- When `highlightOnMatch` is enabled, the detector also updates outlines on the passive edge-transition that triggers a notification (outlines are capped like the scan command and apply to the triggering target only).
+- When `highlightOnMatch` is enabled, the detector also updates outlines on each passive trigger via an upsert (existing un-expired highlights are preserved, newly found ones are added, outlines are capped like the scan command and apply to the triggering target only).
 - Block scans are heavier than entity scans, so block defaults use a slower interval and smaller radius.
 
 ### Highlight Color Overview
