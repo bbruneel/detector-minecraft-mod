@@ -18,7 +18,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"notifier" {
+		"detector" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
