@@ -160,3 +160,21 @@ A change is complete when:
 - [Fabric setup guide](https://docs.fabricmc.net/develop/getting-started/setting-up)
 - [Fabric project creation details](https://docs.fabricmc.net/develop/getting-started/creating-a-project#setting-up)
 - [Fabric wiki tutorials](https://wiki.fabricmc.net/)
+
+## Cursor Cloud specific instructions
+
+This is a pure Java/Gradle project with no external services (no databases, Docker, or web APIs).
+
+**Environment:** Java 21 (OpenJDK) is pre-installed. Gradle 9.4.1 is fetched automatically by the wrapper on first run. The first `./gradlew` invocation downloads Minecraft jars, Yarn mappings, and Fabric API (~1-2 min on a cold cache); subsequent runs are fast.
+
+**Key commands** (all documented in README and CI workflow):
+- `./gradlew test` — run 24 unit tests (JUnit 5)
+- `./gradlew check` — tests + verification tasks (mirrors CI `check` job)
+- `./gradlew build` — full build: compile + test + remapJar + assemble
+- `./gradlew runClient` — launch Minecraft client with the mod (requires a GUI/display; not available in headless Cloud VMs)
+
+**Gotchas:**
+- The Fabric Loom plugin uses a shared file lock (`~/.gradle/caches/fabric-loom`). If two Gradle daemons run concurrently (e.g. from parallel tmux sessions), one will block waiting for the lock. Avoid running multiple Gradle commands in parallel.
+- `BlockScanner.java` emits a deprecation warning during compilation (`uses or overrides a deprecated API`). This is a known upstream Fabric API issue and is not a build failure.
+- `./gradlew runClient` cannot be used in headless Cloud VM environments since it requires a Minecraft client with a display. Unit tests (`./gradlew test`) are the primary validation path for Cloud agents.
+- There is no separate lint tool; `./gradlew check` is the equivalent.
