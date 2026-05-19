@@ -23,7 +23,9 @@ Releases are built and published automatically when you push a version tag.
    - verifies the tag matches `mod_version`
    - creates a GitHub Release and uploads `detector-<version>.jar`
 
-5. Confirm the release on the [Releases](https://github.com/bbruneel/detector-minecraft-mod/releases) page.
+5. Confirm the release on the [Releases](https://github.com/bbruneel/detector-minecraft-mod/releases) page:
+   - the [release workflow](workflows/release.yml) run succeeded (Actions tab)
+   - **Assets** includes `detector-<version>.jar` (not only the automatic Source code archives)
 
 ## Tag rules
 
@@ -34,6 +36,8 @@ Releases are built and published automatically when you push a version tag.
 
 ## Re-running a failed release
 
+If the release page exists but is missing `detector-<version>.jar`, the [release workflow](workflows/release.yml) likely failed before upload. Check the failed run in Actions, fix the cause, then re-publish:
+
 Delete the broken release and tag in GitHub (if created), fix the issue, delete the local/remote tag if needed, then push the tag again:
 
 ```bash
@@ -42,3 +46,13 @@ git push origin :refs/tags/v1.0.0
 git tag -a v1.0.0 -m "Detector 1.0.0"
 git push origin v1.0.0
 ```
+
+## Attaching a jar to an existing release (one-off)
+
+If a release already exists but is missing the mod jar, build locally and upload after `./gradlew remapJar`:
+
+```bash
+gh release upload v1.0.0 build/libs/detector-1.0.0.jar --clobber
+```
+
+Replace the tag and jar name with your version.
