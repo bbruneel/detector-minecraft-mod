@@ -2,6 +2,30 @@
 
 Detector is a Fabric client-side mod for Minecraft `1.21.x` that sends proximity alerts, and outlines, when configured entities or blocks are nearby.
 
+## Installation
+
+Use a [GitHub release](https://github.com/bbruneel/detector-minecraft-mod/releases/latest) for normal play. Building from source is only needed for development.
+
+### Requirements
+
+- **Minecraft:** `1.21.11` (see `gradle.properties` / `fabric.mod.json` for the exact target)
+- **Java:** `21` or newer (for the Minecraft launcher)
+- **Fabric Loader:** install from the [Fabric installer](https://fabricmc.net/use/installer/)
+- **Fabric API:** required; download a build for the same Minecraft version from [Modrinth](https://modrinth.com/mod/fabric-api) or [CurseForge](https://www.curseforge.com/minecraft/mc-mods/fabric-api)
+
+### Download and install
+
+1. Open the **[latest release](https://github.com/bbruneel/detector-minecraft-mod/releases/latest)** page.
+2. Under **Assets**, download `detector-<version>.jar` (for example `detector-1.0.0.jar`).
+3. Install **Fabric Loader** and **Fabric API** for Minecraft `1.21.11` if you have not already.
+4. Copy the Detector jar into your Minecraft **mods** folder:
+   - **Windows:** `%appdata%\.minecraft\mods`
+   - **macOS:** `~/Library/Application Support/minecraft/mods`
+   - **Linux:** `~/.minecraft/mods`
+5. Launch the game with the Fabric profile. In the Mods menu, confirm **Detector** is listed.
+
+Older versions are on the [all releases](https://github.com/bbruneel/detector-minecraft-mod/releases) page. Pick the jar whose Minecraft version matches your instance.
+
 ## What It Does
 
 - Scans around the local player for configured detection targets.
