@@ -1,0 +1,21 @@
+# GitHub "Generate release notes" defaults for tag-based releases.
+changelog:
+  exclude:
+    labels:
+      - dependencies
+      - ignore-for-release
+  categories:
+    - title: Features
+      labels:
+        - enhancement
+        - feature
+    - title: Bug fixes
+      labels:
+        - bug
+        - fix
+    - title: Documentation
+      labels:
+        - documentation
+    - title: Other changes
+      labels:
+        - '*'
