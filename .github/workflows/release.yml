@@ -28,6 +28,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
 
       - name: Resolve release version from tag
         id: version
@@ -38,12 +40,16 @@ jobs:
             echo "Tag must start with 'v' (for example v1.0.0). Got: $TAG"
             exit 1
           fi
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.+-]+)?$ ]]; then
+            echo "Version must look like 1.0.0 or 1.0.0-rc1 (tag: v<version>). Got: $VERSION"
+            exit 1
+          fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Verify gradle.properties matches tag
         run: |
-          PROP="$(grep '^mod_version=' gradle.properties | cut -d= -f2)"
+          PROP="$(grep '^mod_version=' gradle.properties | cut -d= -f2 | tr -d '[:space:]')"
           if [ "${{ steps.version.outputs.version }}" != "$PROP" ]; then
             echo "Tag version (${{ steps.version.outputs.version }}) does not match mod_version in gradle.properties ($PROP)."
             exit 1

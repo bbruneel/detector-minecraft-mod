@@ -28,7 +28,9 @@ Releases are built and published automatically when you push a version tag.
 ## Tag rules
 
 - Tags must look like `v1.0.0`, `v1.2.3`, etc. (leading `v` is required).
-- The part after `v` must equal `mod_version` in `gradle.properties`.
+- The part after `v` must be semver-shaped (`major.minor.patch`, optional `-prerelease` suffix).
+- That version must equal `mod_version` in `gradle.properties`.
+- Tag the commit on `main` that contains the version bump; the workflow checks out the tagged commit.
 
 ## Re-running a failed release
 
